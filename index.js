@@ -130,7 +130,7 @@ async function renderAndEditEmbed() {
 }
 
 // =================================================================
-// 6. CHECK & SEND NOTIFICATION (HAPUS TAG @everyone SETELAH 1 DETIK)
+// 6. CHECK & SEND NOTIFICATION (FORMAT PERSENTASE MINUS / PLUS)
 // =================================================================
 async function checkAndSendNotification(newCount) {
   const channelId = db.getNotificationChannel();
@@ -144,7 +144,9 @@ async function checkAndSendNotification(newCount) {
   if (newCount === prevCount) return;
 
   const percentChange = ((newCount - prevCount) / prevCount) * 100;
-  const absChange = Math.abs(percentChange).toFixed(2);
+  
+  // Format string persentase dengan tanda eksplisit (- / +)
+  const formattedPercent = (percentChange > 0 ? '+' : '') + percentChange.toFixed(2) + '%';
 
   let emoji = '<a:StatusTypingIdle:1409293104766255247>'; // NORMAL
   let statusText = 'Stable';
@@ -169,7 +171,7 @@ async function checkAndSendNotification(newCount) {
   }
 
   const currentUnixSec = Math.floor(Date.now() / 1000);
-  const contentBody = `**${emoji} [<t:${currentUnixSec}:T>] ${statusText} ${arrow} (${prevCount.toLocaleString()} → ${newCount.toLocaleString()} / ${percentChange > 0 ? '+' : ''}${absChange}%)**`;
+  const contentBody = `**${emoji} [<t:${currentUnixSec}:T>] ${statusText} ${arrow} (${prevCount.toLocaleString()} → ${newCount.toLocaleString()} / ${formattedPercent})**`;
 
   const finalMessage = isBanned ? `@everyone\n${contentBody}` : contentBody;
 
