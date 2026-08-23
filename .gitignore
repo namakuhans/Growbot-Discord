@@ -1,0 +1,13 @@
+# Node modules
+node_modules/
+
+# Environment variables & Config rahasia
+.env
+config/config.js
+
+# Database lokal & folder data
+data/
+*.json
+config/config.js
+node_modules/
+data/
