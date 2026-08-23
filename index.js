@@ -130,7 +130,7 @@ async function renderAndEditEmbed() {
 }
 
 // =================================================================
-// 6. CHECK & SEND NOTIFICATION (DENGAN TAG @everyone JIKA BANNED)
+// 6. CHECK & SEND NOTIFICATION (HAPUS TAG @everyone SETELAH 1 DETIK)
 // =================================================================
 async function checkAndSendNotification(newCount) {
   const channelId = db.getNotificationChannel();
@@ -171,13 +171,24 @@ async function checkAndSendNotification(newCount) {
   const currentUnixSec = Math.floor(Date.now() / 1000);
   const contentBody = `**${emoji} [<t:${currentUnixSec}:T>] ${statusText} ${arrow} (${prevCount.toLocaleString()} → ${newCount.toLocaleString()} / ${percentChange > 0 ? '+' : ''}${absChange}%)**`;
 
-  // Tambahkan @everyone di atas baris pesan berformat **...** jika status BANNED
   const finalMessage = isBanned ? `@everyone\n${contentBody}` : contentBody;
 
   try {
     const channel = await client.channels.fetch(channelId).catch(() => null);
     if (channel && channel.isTextBased()) {
-      await channel.send(finalMessage);
+      // 1. Kirim pesan dengan @everyone (jika banned)
+      const sentMessage = await channel.send(finalMessage);
+
+      // 2. Jika status BANNED, tunggu 1 detik lalu edit pesan untuk menghapus tag @everyone
+      if (isBanned) {
+        setTimeout(async () => {
+          try {
+            await sentMessage.edit(contentBody);
+          } catch (editErr) {
+            console.error('[Notification Error] Failed to remove @everyone tag:', editErr.message);
+          }
+        }, 1000); // Jeda 1000ms / 1 detik
+      }
     }
   } catch (err) {
     console.error('[Notification Error] Failed to send alert:', err.message);
