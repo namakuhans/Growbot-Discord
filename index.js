@@ -130,7 +130,7 @@ async function renderAndEditEmbed() {
 }
 
 // =================================================================
-// 6. CHECK & SEND NOTIFICATION (FORMAT PERSENTASE MINUS / PLUS)
+// 6. CHECK & SEND NOTIFICATION
 // =================================================================
 async function checkAndSendNotification(newCount) {
   const channelId = db.getNotificationChannel();
@@ -144,8 +144,6 @@ async function checkAndSendNotification(newCount) {
   if (newCount === prevCount) return;
 
   const percentChange = ((newCount - prevCount) / prevCount) * 100;
-  
-  // Format string persentase dengan tanda eksplisit (- / +)
   const formattedPercent = (percentChange > 0 ? '+' : '') + percentChange.toFixed(2) + '%';
 
   let emoji = '<a:StatusTypingIdle:1409293104766255247>'; // NORMAL
@@ -178,10 +176,8 @@ async function checkAndSendNotification(newCount) {
   try {
     const channel = await client.channels.fetch(channelId).catch(() => null);
     if (channel && channel.isTextBased()) {
-      // 1. Kirim pesan dengan @everyone (jika banned)
       const sentMessage = await channel.send(finalMessage);
 
-      // 2. Jika status BANNED, tunggu 1 detik lalu edit pesan untuk menghapus tag @everyone
       if (isBanned) {
         setTimeout(async () => {
           try {
@@ -189,7 +185,7 @@ async function checkAndSendNotification(newCount) {
           } catch (editErr) {
             console.error('[Notification Error] Failed to remove @everyone tag:', editErr.message);
           }
-        }, 1000); // Jeda 1000ms / 1 detik
+        }, 1000);
       }
     }
   } catch (err) {
@@ -198,7 +194,7 @@ async function checkAndSendNotification(newCount) {
 }
 
 // =================================================================
-// 7. CLIENT READY & EVENT DRIVEN POLLING
+// 7. CLIENT READY & POLLING
 // =================================================================
 client.once('ready', async () => {
   console.log(`🤖 Bot logged in as: ${client.user.tag}`);
@@ -228,11 +224,33 @@ client.once('ready', async () => {
 });
 
 // =================================================================
-// 8. INTERACTION EVENT LISTENER
+// 8. INTERACTION EVENT LISTENER (COMMAND RESTRICTION + PUBLIC BUTTONS)
 // =================================================================
 client.on('interactionCreate', async (interaction) => {
   try {
+    // 1. CEK OTORISASI KHUSUS SLASH COMMANDS (/gt, /proxy, /notif)
     if (interaction.isChatInputCommand()) {
+      const userId = interaction.user.id;
+      const memberRoles = interaction.member ? interaction.member.roles.cache : null;
+
+      // Cek apakah user termasuk dalam ALLOWED_USERS
+      const isUserAllowed = config.ALLOWED_USERS && config.ALLOWED_USERS.includes(userId);
+      
+      // Cek apakah user memiliki salah satu dari ALLOWED_ROLES
+      let isRoleAllowed = false;
+      if (memberRoles && config.ALLOWED_ROLES && config.ALLOWED_ROLES.length > 0) {
+        isRoleAllowed = config.ALLOWED_ROLES.some(roleId => memberRoles.has(roleId));
+      }
+
+      // Jika tidak memenuhi syarat User ID atau Role ID, tolak akses command
+      if (!isUserAllowed && !isRoleAllowed) {
+        return await interaction.reply({
+          content: '❌ **Access Denied:** You do not have permission to use this command!',
+          ephemeral: true
+        });
+      }
+
+      // Jalankan command jika lolos validasi
       if (interaction.commandName === 'gt') {
         await gtCommand.execute(interaction);
       } else if (interaction.commandName === 'proxy') {
@@ -241,6 +259,7 @@ client.on('interactionCreate', async (interaction) => {
         await notifCommand.execute(interaction);
       }
     } 
+    // 2. INTERAKSI DROPDOWN / SELECT MENU TETAP BISA DIGUNAKAN OLEH PUBLIK
     else if (interaction.isStringSelectMenu()) {
       await interaction.deferUpdate().catch(() => {});
 
