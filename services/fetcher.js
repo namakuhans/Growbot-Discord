@@ -36,9 +36,11 @@ async function fetchOnlinePlayers() {
 
       const response = await axios.get('https://growtopiagame.com/detail', axiosConfig);
 
-      if (!response.data) throw new Error('Response data kosong');
+      if (!response || !response.data) throw new Error('Response data kosong');
 
       const parsed = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+      if (!parsed || typeof parsed !== 'object') throw new Error('Format response data tidak valid');
+
       const count = parseInt(parsed.online_user, 10);
 
       if (isNaN(count)) throw new Error('Data online_user tidak valid/bukan angka');

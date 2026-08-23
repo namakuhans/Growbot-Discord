@@ -22,8 +22,12 @@ class DatabaseService {
     try {
       if (fsSync.existsSync(this.filePath)) {
         const raw = fsSync.readFileSync(this.filePath, 'utf8');
-        this.data = JSON.parse(raw);
-        if (!this.data.notificationChannelId) this.data.notificationChannelId = null;
+        const parsed = JSON.parse(raw);
+        this.data = {
+          activeMonitoring: parsed.activeMonitoring || null,
+          notificationChannelId: parsed.notificationChannelId || null,
+          history: Array.isArray(parsed.history) ? parsed.history : []
+        };
         console.log('[DB] Database lokal berhasil dimuat.');
       }
     } catch (err) {
@@ -41,11 +45,13 @@ class DatabaseService {
   }
 
   addHistoryRecord(count) {
+    if (typeof count !== 'number' || isNaN(count)) return;
+
     const now = Date.now();
     this.data.history.push({ timestamp: now, count });
     
     const cutoff = now - MAX_HISTORY_MS;
-    this.data.history = this.data.history.filter(item => item.timestamp >= cutoff);
+    this.data.history = this.data.history.filter(item => item && typeof item.timestamp === 'number' && item.timestamp >= cutoff);
     
     this.save();
   }
@@ -69,7 +75,7 @@ class DatabaseService {
   }
 
   getHistory() {
-    return this.data.history;
+    return this.data.history || [];
   }
 }
 
