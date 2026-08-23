@@ -35,29 +35,43 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
     const now = Date.now();
     const cutoff = now - (timeframeMinutes * 60 * 1000);
     
-    let filteredData = history.filter(item => item.timestamp >= cutoff);
+    let filteredData = (history || []).filter(item => item && typeof item.count === 'number' && item.timestamp >= cutoff);
 
-    if (filteredData.length === 0 && history.length > 0) {
-      filteredData = [history[history.length - 1]];
+    if (filteredData.length === 0 && Array.isArray(history) && history.length > 0) {
+      const validItem = history[history.length - 1];
+      if (validItem && typeof validItem.count === 'number') {
+        filteredData = [validItem];
+      }
     }
 
+    // Downsampling dengan Bucket Averaging jika data point melebihi MAX_POINTS
     const MAX_POINTS = 12;
     if (filteredData.length > MAX_POINTS) {
-      const step = Math.ceil(filteredData.length / MAX_POINTS);
+      const bucketSize = filteredData.length / MAX_POINTS;
       const sampled = [];
-      for (let i = 0; i < filteredData.length; i += step) {
-        sampled.push(filteredData[i]);
-      }
-      if (sampled[sampled.length - 1] !== filteredData[filteredData.length - 1]) {
-        sampled[sampled.length - 1] = filteredData[filteredData.length - 1];
+      for (let i = 0; i < MAX_POINTS; i++) {
+        const startIdx = Math.floor(i * bucketSize);
+        const endIdx = Math.min(Math.floor((i + 1) * bucketSize), filteredData.length);
+        const bucket = filteredData.slice(startIdx, endIdx);
+        if (bucket.length > 0) {
+          const avgCount = Math.round(bucket.reduce((sum, item) => sum + item.count, 0) / bucket.length);
+          const reprTimestamp = bucket[bucket.length - 1].timestamp;
+          sampled.push({ timestamp: reprTimestamp, count: avgCount });
+        }
       }
       filteredData = sampled;
     }
 
+    // Format label sumbu X (sertakan detik untuk timeframe <= 5 menit)
+    const includeSeconds = timeframeMinutes <= 5;
     const labels = filteredData.map(item => {
       const date = new Date(item.timestamp);
       const hh = date.getHours().toString().padStart(2, '0');
       const mm = date.getMinutes().toString().padStart(2, '0');
+      if (includeSeconds) {
+        const ss = date.getSeconds().toString().padStart(2, '0');
+        return `${hh}:${mm}:${ss}`;
+      }
       return `${hh}:${mm}`;
     });
 
