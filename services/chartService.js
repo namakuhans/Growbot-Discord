@@ -1,5 +1,39 @@
 const QuickChart = require('quickchart-js');
 
+// Palet warna bersaturasi tinggi (High-saturation vibrant colors)
+const VIBRANT_PALETTE = [
+  { hex: '#FF0055', rgb: '255, 0, 85' },    // Neon Electric Red
+  { hex: '#00E5FF', rgb: '0, 229, 255' },   // Vibrant Cyan / Electric Blue
+  { hex: '#00FF66', rgb: '0, 255, 102' },   // Neon Vivid Green
+  { hex: '#A000FF', rgb: '160, 0, 255' },   // Electric Purple
+  { hex: '#FFD700', rgb: '255, 215, 0' },   // High-Contrast Gold Yellow
+  { hex: '#FF5500', rgb: '255, 85, 0' },    // Neon Orange
+  { hex: '#FF00E5', rgb: '255, 0, 229' }    // Hot Magenta
+];
+
+// Mendapatkan konfigurasi warna dinamis yang sinkron berdasarkan kombinasi data/timeframe/style
+function getDynamicColorConfig(history = [], timeframeMinutes = 60, styleOption = 'fill_value') {
+  // Hitung seed dinamis berdasarkan timestamp record terakhir dan total count
+  let seed = 0;
+  if (history && history.length > 0) {
+    const last = history[history.length - 1];
+    seed = (last.timestamp || 0) + (last.count || 0) + Number(timeframeMinutes);
+  } else {
+    seed = Number(timeframeMinutes);
+  }
+
+  // Hash sederhana untuk memilih warna konsisten
+  const index = Math.abs(seed) % VIBRANT_PALETTE.length;
+  const palette = VIBRANT_PALETTE[index];
+
+  return {
+    hex: palette.hex,
+    borderColor: `rgb(${palette.rgb})`,
+    backgroundColor: `rgba(${palette.rgb}, 0.25)`,
+    solidBackgroundColor: `rgb(${palette.rgb})`
+  };
+}
+
 // Map nama variabel internal ke nama tampilan label Dropdown
 function getStyleLabel(styleKey) {
   const styleMap = {
@@ -30,8 +64,9 @@ function formatTimeframeLabel(minutes) {
   }
 }
 
-function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value') {
+function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value', colorConfig = null) {
   try {
+    const colors = colorConfig || getDynamicColorConfig(history, timeframeMinutes, styleOption);
     const now = Date.now();
     const cutoff = now - (timeframeMinutes * 60 * 1000);
     
@@ -93,9 +128,9 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           data: {
             datasets: [{
               label: titleLabel,
-              backgroundColor: 'rgba(255, 99, 132, 0.5)',
-              borderColor: 'rgb(255, 99, 132)',
-              borderWidth: 1,
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.borderColor,
+              borderWidth: 2,
               data: dataPoints.map((val, idx) => ({
                 x: idx + 1,
                 y: val,
@@ -113,7 +148,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
         chart.setHeight(100);
         chart.setConfig({
           type: 'sparkline',
-          data: { datasets: [{ data: dataPoints.length > 0 ? dataPoints : [0] }] }
+          data: { datasets: [{ data: dataPoints.length > 0 ? dataPoints : [0], borderColor: colors.borderColor, backgroundColor: colors.backgroundColor }] }
         });
         break;
 
@@ -123,7 +158,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'horizontalBar',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ label: titleLabel, data: dataPoints, backgroundColor: 'gold' }]
+            datasets: [{ label: titleLabel, data: dataPoints, backgroundColor: colors.solidBackgroundColor }]
           },
           options: {
             scales: {
@@ -141,7 +176,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'line',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ label: titleLabel, steppedLine: true, data: dataPoints, borderColor: 'rgb(255, 99, 132)', fill: false }]
+            datasets: [{ label: titleLabel, steppedLine: true, data: dataPoints, borderColor: colors.borderColor, fill: false }]
           },
           options: { title: { display: true, text: 'Stepped line' } }
         });
@@ -153,7 +188,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'line',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ label: titleLabel, backgroundColor: 'rgb(255, 99, 132)', borderColor: 'rgb(255, 99, 132)', data: dataPoints, fill: false, pointRadius: 10, showLine: false }]
+            datasets: [{ label: titleLabel, backgroundColor: colors.solidBackgroundColor, borderColor: colors.borderColor, data: dataPoints, fill: false, pointRadius: 10, showLine: false }]
           },
           options: {
             title: { display: true, text: 'Point Style: circle' },
@@ -170,7 +205,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'line',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ label: titleLabel, backgroundColor: 'rgb(255, 99, 132)', borderColor: 'rgb(255, 99, 132)', data: dataPoints, fill: false, pointRadius: 10, showLine: false }]
+            datasets: [{ label: titleLabel, backgroundColor: colors.solidBackgroundColor, borderColor: colors.borderColor, data: dataPoints, fill: false, pointRadius: 10, showLine: false }]
           },
           options: {
             title: { display: true, text: 'Point Style: triangle' },
@@ -186,7 +221,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'line',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ backgroundColor: 'rgba(255, 99, 132, 0.5)', borderColor: 'rgb(255, 99, 132)', data: dataPoints, label: titleLabel, fill: false }]
+            datasets: [{ backgroundColor: colors.backgroundColor, borderColor: colors.borderColor, data: dataPoints, label: titleLabel, fill: false }]
           },
           options: { title: { text: 'fill: false', display: true } }
         });
@@ -198,7 +233,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'line',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ label: titleLabel, backgroundColor: 'rgb(255, 99, 132)', borderColor: 'rgb(255, 99, 132)', data: dataPoints, fill: false }]
+            datasets: [{ label: titleLabel, backgroundColor: colors.solidBackgroundColor, borderColor: colors.borderColor, data: dataPoints, fill: false }]
           },
           options: {
             scales: { yAxes: [{ ticks: { beginAtZero: true, callback: (val) => val.toLocaleString() + ' Players' } }] }
@@ -212,7 +247,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
           type: 'line',
           data: {
             labels: labels.length > 0 ? labels : ['1'],
-            datasets: [{ label: titleLabel, backgroundColor: 'rgb(255, 99, 132)', borderColor: 'rgb(255, 99, 132)', data: dataPoints, fill: false }]
+            datasets: [{ label: titleLabel, backgroundColor: colors.solidBackgroundColor, borderColor: colors.borderColor, data: dataPoints, fill: false }]
           },
           options: {
             scales: { xAxes: [{ ticks: { minRotation: 90 } }] }
@@ -232,9 +267,9 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
               label: titleLabel,
               data: dataPoints,
               lineTension: 0.4,
-              borderColor: '#ff3333',
-              backgroundColor: '#ffcccc',
-              fill: { target: { value: avgVal }, above: 'transparent', below: '#ffcccc' }
+              borderColor: colors.hex,
+              backgroundColor: colors.backgroundColor,
+              fill: { target: { value: avgVal }, above: 'transparent', below: colors.backgroundColor }
             }]
           }
         });
@@ -251,4 +286,4 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value')
   }
 }
 
-module.exports = { generateChartUrl, formatTimeframeLabel, getStyleLabel };
+module.exports = { generateChartUrl, formatTimeframeLabel, getStyleLabel, getDynamicColorConfig };

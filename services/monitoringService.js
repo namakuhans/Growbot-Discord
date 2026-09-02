@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const db = require('./database');
-const { generateChartUrl, formatTimeframeLabel, getStyleLabel } = require('./chartService');
+const { generateChartUrl, formatTimeframeLabel, getStyleLabel, getDynamicColorConfig } = require('./chartService');
 const { createMonitoringComponents } = require('../components/buttons');
 const { getWibTimestampString } = require('../utils/time');
 
@@ -8,7 +8,8 @@ function buildMonitoringPayload(client, timeframeMinutes, styleOption) {
   const history = db.getHistory();
   const latestCount = history.length > 0 ? history[history.length - 1].count : 0;
 
-  const chartUrl = generateChartUrl(history, timeframeMinutes, styleOption);
+  const colorConfig = getDynamicColorConfig(history, timeframeMinutes, styleOption);
+  const chartUrl = generateChartUrl(history, timeframeMinutes, styleOption, colorConfig);
   const timeframeText = formatTimeframeLabel(timeframeMinutes);
   const styleDisplayLabel = getStyleLabel(styleOption);
 
@@ -25,7 +26,7 @@ function buildMonitoringPayload(client, timeframeMinutes, styleOption) {
       'Need a custom bot or selfbot for your server, business, or project automation?\n' +
       'Contact Developer: <@758224726526656513>'
     )
-    .setColor('#FF3333')
+    .setColor(colorConfig.hex)
     .setThumbnail(botAvatarUrl)
     .addFields(
       { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
