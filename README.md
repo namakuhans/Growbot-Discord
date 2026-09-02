@@ -47,7 +47,7 @@ Bot Discord berbasis Node.js untuk pemantauan realtime jumlah pemain online Grow
 * Menghitung persentase perubahan pemain antara record terakhir dan record sebelumnya:
   $$\Delta\% = \frac{\text{Count}_{\text{new}} - \text{Count}_{\text{prev}}}{\text{Count}_{\text{prev}}} \times 100$$
 * **Kondisi Notifikasi**:
-  * $\Delta\% < -1.0\%$: Terdeteksi penurunan drastis (Ban Rate / Drop). Mengirim notifikasi dengan mention `@everyone` yang secara otomatis dihapus dari konten pesan setelah jeda 5 detik (`setTimeout 5000ms`).
+  * $\Delta\% < -1.0\%$: Terdeteksi penurunan drastis (Ban Rate / Drop). Mengirim notifikasi dengan mention `@everyone` yang secara otomatis dihapus dari konten pesan setelah jeda 1 detik (`setTimeout 1000ms`).
   * $\Delta\% > 1.0\%$: Terdeteksi lonjakan pemain (Player Surge).
   * $-0.8\% \le \Delta\% \le 0.8\%$: Kondisi normal / stabil.
 
@@ -112,7 +112,7 @@ Polling Loop (`setInterval`, min 5000ms)
       │         ▼
       ├─► Hitung Fluktuasi vs Record Terakhir
       │         │
-      │         ├─► [Jika Δ% < -1.0%]: Send Alert + Tag @everyone -> Delete Tag after 5s
+      │         ├─► [Jika Δ% < -1.0%]: Send Alert + Tag @everyone -> Delete Tag after 1s
       │         └─► [Jika Δ% > 1.0%]: Send Alert Normal
       │
       ├─► Simpan Record Baru ke `data.json` & Purge Data Old
