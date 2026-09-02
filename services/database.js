@@ -47,6 +47,12 @@ class DatabaseService {
   addHistoryRecord(count) {
     if (typeof count !== 'number' || isNaN(count)) return;
 
+    // Jangan catat jika player count sama dengan data terakhir
+    if (this.data.history.length > 0) {
+      const last = this.data.history[this.data.history.length - 1];
+      if (last && last.count === count) return;
+    }
+
     const now = Date.now();
     this.data.history.push({ timestamp: now, count });
     
