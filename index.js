@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, REST, Routes, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, ActivityType, REST, Routes, EmbedBuilder } = require('discord.js');
 const config = require('./config/config');
 const db = require('./services/database');
 const { fetchOnlinePlayers } = require('./services/fetcher');
@@ -8,10 +8,7 @@ const gtCommand = require('./commands/gt');
 const proxyCommand = require('./commands/proxy');
 const notifCommand = require('./commands/notif');
 
-// Animated GIF Thumbnail URL for Embed
-const THUMBNAIL_URL = 'https://cdn.discordapp.com/attachments/1407966960498642965/1407967063657681037/Proyek_Baru_121_B8AF8E8.gif?ex=6a80a8c2&is=6a7f5742&hm=1e1d6578de692';
-
-// Variabel untuk menyimpan cache jumlah player terakhir guna mendeteksi perubahan
+// Cache jumlah player terakhir guna mendeteksi perubahan
 let lastKnownPlayerCount = null;
 
 // =================================================================
@@ -67,7 +64,22 @@ function getWibTimestampString() {
 }
 
 // =================================================================
-// 4. HELPER BUILDER UNTUK MONITORING PAYLOAD
+// 4. HELPER DYNAMIC BOT RPC (WATCHING ONLINE PLAYERS)
+// =================================================================
+function updateBotPresence(playerCount) {
+  if (!client.user) return;
+  const countStr = playerCount !== null ? playerCount.toLocaleString() : '0';
+  client.user.setPresence({
+    activities: [{
+      name: `${countStr} Online Players`,
+      type: ActivityType.Watching
+    }],
+    status: 'online'
+  });
+}
+
+// =================================================================
+// 5. HELPER BUILDER UNTUK MONITORING PAYLOAD
 // =================================================================
 function buildMonitoringPayload(timeframeMinutes, styleOption) {
   const history = db.getHistory();
@@ -80,6 +92,9 @@ function buildMonitoringPayload(timeframeMinutes, styleOption) {
   const currentUnixSec = Math.floor(Date.now() / 1000);
   const customWibTimeStr = getWibTimestampString();
 
+  // Mengambil gambar Profil Avatar Bot secara Dinamis
+  const botAvatarUrl = client.user.displayAvatarURL({ extension: 'png', dynamic: true, size: 512 });
+
   const embed = new EmbedBuilder()
     .setTitle('<a:emoji_11:1342592665337856021> 𝗚𝗿𝗼𝘄𝘁𝗼𝗽𝗶𝗮 𝗟𝗶𝘃𝗲 𝗦𝗲𝗿𝘃𝗲𝗿 𝗠𝗼𝗻𝗶𝘁𝗼𝗿𝗶𝗻𝗴')
     .setDescription(
@@ -89,10 +104,10 @@ function buildMonitoringPayload(timeframeMinutes, styleOption) {
       'Contact Developer: <@758224726526656513>'
     )
     .setColor('#FF3333')
-    .setThumbnail(THUMBNAIL_URL)
+    .setThumbnail(botAvatarUrl)
     .addFields(
       { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
-      { name: '<a:emoji_23:1349148026400276500> 𝗧𝗜𝗠𝗘𝗙𝗥𝗔𝗠𝗘 𝗚𝗥𝗔𝗣𝗛𝗜𝗖', value: `\`${timeframeText}\``, inline: true },
+      { name: '<a:emoji_23:1349148026400276500> 𝗧𝗜𝗠𝗘𝗙𝗥𝗔𝗠E 𝗚𝗥𝗔𝗣𝗛𝗜𝗖', value: `\`${timeframeText}\``, inline: true },
       { name: '<a:emoji_22:1349147982498500824> 𝗩𝗜𝗦𝗨𝗔𝗟 𝗦𝗧𝗬𝗟𝗘', value: `\`${styleDisplayLabel}\``, inline: true },
       { name: '<a:emoji_23:1349148026400276500> **Last Update**', value: `<t:${currentUnixSec}:R>`, inline: false }
     )
@@ -106,7 +121,7 @@ function buildMonitoringPayload(timeframeMinutes, styleOption) {
 }
 
 // =================================================================
-// 5. RENDER & EDIT EMBED HANDLER (HANYA JIKA ADA PERUBAHAN)
+// 6. RENDER & EDIT EMBED HANDLER
 // =================================================================
 async function renderAndEditEmbed() {
   const active = db.getActiveMonitoring();
@@ -130,7 +145,7 @@ async function renderAndEditEmbed() {
 }
 
 // =================================================================
-// 6. CHECK & SEND NOTIFICATION (HAPUS TAG @everyone SETELAH 1 DETIK)
+// 7. CHECK & SEND NOTIFICATION
 // =================================================================
 async function checkAndSendNotification(newCount) {
   const channelId = db.getNotificationChannel();
@@ -144,24 +159,24 @@ async function checkAndSendNotification(newCount) {
   if (newCount === prevCount) return;
 
   const percentChange = ((newCount - prevCount) / prevCount) * 100;
-  const absChange = Math.abs(percentChange).toFixed(2);
+  const formattedPercent = (percentChange > 0 ? '+' : '') + percentChange.toFixed(2) + '%';
 
-  let emoji = '<a:StatusTypingIdle:1409293104766255247>'; // NORMAL
+  let emoji = '<a:StatusTypingIdle:1409293104766255247>';
   let statusText = 'Stable';
   let arrow = '→';
   let isBanned = false;
 
   if (percentChange < -1.0) {
-    emoji = '<a:StatusTypingDND:1409292967675695198>'; // BANNED (Turun > 1%)
+    emoji = '<a:StatusTypingDND:1409292967675695198>';
     statusText = 'Ban Rate';
     arrow = '↓';
     isBanned = true;
   } else if (percentChange > 1.0) {
-    emoji = '<a:StatusTyping:1409292656437235732>'; // SAFE (Naik > 1%)
+    emoji = '<a:StatusTyping:1409292656437235732>';
     statusText = 'Player Surge';
     arrow = '↑';
   } else if (percentChange >= -0.8 && percentChange <= 0.8) {
-    emoji = '<a:StatusTypingIdle:1409293104766255247>'; // NORMAL
+    emoji = '<a:StatusTypingIdle:1409293104766255247>';
     statusText = 'Activity';
     arrow = '→';
   } else {
@@ -169,17 +184,15 @@ async function checkAndSendNotification(newCount) {
   }
 
   const currentUnixSec = Math.floor(Date.now() / 1000);
-  const contentBody = `**${emoji} [<t:${currentUnixSec}:T>] ${statusText} ${arrow} (${prevCount.toLocaleString()} → ${newCount.toLocaleString()} / ${percentChange > 0 ? '+' : ''}${absChange}%)**`;
+  const contentBody = `**${emoji} [<t:${currentUnixSec}:T>] ${statusText} ${arrow} (${prevCount.toLocaleString()} → ${newCount.toLocaleString()} / ${formattedPercent})**`;
 
   const finalMessage = isBanned ? `@everyone\n${contentBody}` : contentBody;
 
   try {
     const channel = await client.channels.fetch(channelId).catch(() => null);
     if (channel && channel.isTextBased()) {
-      // 1. Kirim pesan dengan @everyone (jika banned)
       const sentMessage = await channel.send(finalMessage);
 
-      // 2. Jika status BANNED, tunggu 1 detik lalu edit pesan untuk menghapus tag @everyone
       if (isBanned) {
         setTimeout(async () => {
           try {
@@ -187,7 +200,7 @@ async function checkAndSendNotification(newCount) {
           } catch (editErr) {
             console.error('[Notification Error] Failed to remove @everyone tag:', editErr.message);
           }
-        }, 1000); // Jeda 1000ms / 1 detik
+        }, 1000);
       }
     }
   } catch (err) {
@@ -196,10 +209,15 @@ async function checkAndSendNotification(newCount) {
 }
 
 // =================================================================
-// 7. CLIENT READY & EVENT DRIVEN POLLING
+// 8. CLIENT READY & POLLING LOOP
 // =================================================================
 client.once('ready', async () => {
   console.log(`🤖 Bot logged in as: ${client.user.tag}`);
+
+  // Inisialisasi Rich Presence Awal
+  const initialHistory = db.getHistory();
+  const initialCount = initialHistory.length > 0 ? initialHistory[initialHistory.length - 1].count : 0;
+  updateBotPresence(initialCount);
 
   try {
     const rest = new REST({ version: '10' }).setToken(config.TOKEN);
@@ -212,12 +230,13 @@ client.once('ready', async () => {
     console.error('[System Error] Failed to register commands:', err.message);
   }
 
-  // Interval polling paling cepat 5 detik (5000ms)
-  const fetchInterval = Math.max(5000, Number(config.FETCH_INTERVAL) || 5000);
-
+  // Polling Data Player
   setInterval(async () => {
     const count = await fetchOnlinePlayers();
     if (count !== null) {
+      // Update RPC secara dinamis
+      updateBotPresence(count);
+
       if (lastKnownPlayerCount === null || count !== lastKnownPlayerCount) {
         await checkAndSendNotification(count);
         db.addHistoryRecord(count);
@@ -229,11 +248,27 @@ client.once('ready', async () => {
 });
 
 // =================================================================
-// 8. INTERACTION EVENT LISTENER
+// 9. INTERACTION EVENT LISTENER
 // =================================================================
 client.on('interactionCreate', async (interaction) => {
   try {
     if (interaction.isChatInputCommand()) {
+      const userId = interaction.user.id;
+      const memberRoles = interaction.member ? interaction.member.roles.cache : null;
+
+      const isUserAllowed = config.ALLOWED_USERS && config.ALLOWED_USERS.includes(userId);
+      let isRoleAllowed = false;
+      if (memberRoles && config.ALLOWED_ROLES && config.ALLOWED_ROLES.length > 0) {
+        isRoleAllowed = config.ALLOWED_ROLES.some(roleId => memberRoles.has(roleId));
+      }
+
+      if (!isUserAllowed && !isRoleAllowed) {
+        return await interaction.reply({
+          content: '❌ **Access Denied:** You do not have permission to use this command!',
+          ephemeral: true
+        });
+      }
+
       if (interaction.commandName === 'gt') {
         await gtCommand.execute(interaction);
       } else if (interaction.commandName === 'proxy') {
@@ -272,6 +307,6 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 // =================================================================
-// 9. LOGIN DISCORD BOT
+// 10. LOGIN DISCORD BOT
 // =================================================================
 client.login(config.TOKEN);
