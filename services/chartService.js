@@ -61,22 +61,10 @@ function generateChartUrl(history, styleOption = 'fill_value', colorConfig = nul
       }
     }
 
-    // Downsampling dengan Bucket Averaging jika data point melebihi MAX_POINTS
-    const MAX_POINTS = 12;
+    // Ambil 20 data point paling baru agar grafik bergerak secara real-time pada setiap fetch
+    const MAX_POINTS = 20;
     if (filteredData.length > MAX_POINTS) {
-      const bucketSize = filteredData.length / MAX_POINTS;
-      const sampled = [];
-      for (let i = 0; i < MAX_POINTS; i++) {
-        const startIdx = Math.floor(i * bucketSize);
-        const endIdx = Math.min(Math.floor((i + 1) * bucketSize), filteredData.length);
-        const bucket = filteredData.slice(startIdx, endIdx);
-        if (bucket.length > 0) {
-          const avgCount = Math.round(bucket.reduce((sum, item) => sum + item.count, 0) / bucket.length);
-          const reprTimestamp = bucket[bucket.length - 1].timestamp;
-          sampled.push({ timestamp: reprTimestamp, count: avgCount });
-        }
-      }
-      filteredData = sampled;
+      filteredData = filteredData.slice(-MAX_POINTS);
     }
 
     const labels = filteredData.map(item => {
@@ -88,6 +76,14 @@ function generateChartUrl(history, styleOption = 'fill_value', colorConfig = nul
     });
 
     const dataPoints = filteredData.map(item => item.count);
+
+    // Hitung min/max dinamis beserta padding agar pergerakan fluktuasi terlihat jelas
+    const minVal = dataPoints.length > 0 ? Math.min(...dataPoints) : 0;
+    const maxVal = dataPoints.length > 0 ? Math.max(...dataPoints) : 100;
+    const valRange = maxVal - minVal;
+    const padding = valRange === 0 ? Math.max(Math.round(minVal * 0.02), 5) : Math.max(Math.round(valRange * 0.15), 5);
+    const suggestedMin = Math.max(0, minVal - padding);
+    const suggestedMax = maxVal + padding;
 
     const chart = new QuickChart();
     chart.setBackgroundColor('#ffffff');
@@ -266,7 +262,8 @@ function generateChartUrl(history, styleOption = 'fill_value', colorConfig = nul
           options: {
             scales: {
               y: {
-                beginAtZero: false
+                suggestedMin: suggestedMin,
+                suggestedMax: suggestedMax
               }
             }
           }
