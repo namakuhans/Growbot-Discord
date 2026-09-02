@@ -130,7 +130,7 @@ async function renderAndEditEmbed() {
 }
 
 // =================================================================
-// 6. CHECK & SEND NOTIFICATION (HAPUS TAG @everyone SETELAH 1 DETIK)
+// 6. CHECK & SEND NOTIFICATION (HAPUS TAG @everyone SETELAH 5 DETIK)
 // =================================================================
 async function checkAndSendNotification(newCount) {
   const channelId = db.getNotificationChannel();
@@ -179,7 +179,7 @@ async function checkAndSendNotification(newCount) {
       // 1. Kirim pesan dengan @everyone (jika banned)
       const sentMessage = await channel.send(finalMessage);
 
-      // 2. Jika status BANNED, tunggu 1 detik lalu edit pesan untuk menghapus tag @everyone
+      // 2. Jika status BANNED, tunggu 5 detik lalu edit pesan untuk menghapus tag @everyone
       if (isBanned) {
         setTimeout(async () => {
           try {
@@ -187,7 +187,7 @@ async function checkAndSendNotification(newCount) {
           } catch (editErr) {
             console.error('[Notification Error] Failed to remove @everyone tag:', editErr.message);
           }
-        }, 1000); // Jeda 1000ms / 1 detik
+        }, 5000); // Jeda 5000ms / 5 detik
       }
     }
   } catch (err) {
@@ -212,6 +212,9 @@ client.once('ready', async () => {
     console.error('[System Error] Failed to register commands:', err.message);
   }
 
+  // Interval polling paling cepat 5 detik (5000ms)
+  const fetchInterval = Math.max(5000, Number(config.FETCH_INTERVAL) || 5000);
+
   setInterval(async () => {
     const count = await fetchOnlinePlayers();
     if (count !== null) {
@@ -222,7 +225,7 @@ client.once('ready', async () => {
         lastKnownPlayerCount = count;
       }
     }
-  }, config.FETCH_INTERVAL);
+  }, fetchInterval);
 });
 
 // =================================================================

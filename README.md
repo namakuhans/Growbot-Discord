@@ -7,7 +7,7 @@ Bot Discord berbasis Node.js untuk pemantauan realtime jumlah pemain online Grow
 ## Arsitektur & Komponen Utama
 
 ### 1. Polling & Ingestion Engine (`index.js` & `services/fetcher.js`)
-* **Interval Execution**: Polling dijalankan menggunakan `setInterval` berdasarkan `FETCH_INTERVAL` (default: 10,000ms / 10s).
+* **Interval Execution**: Polling dijalankan menggunakan `setInterval` berdasarkan `FETCH_INTERVAL` (default: 5,000ms / 5s, dibatasi minimum 5 detik).
 * **HTTP Client**: Pengambilan data dari endpoint API Growtopia dilakukan via `axios` dengan custom header spoofing (User-Agent Chrome, No-Cache).
 * **Failover & Rotasi Proxy**: Menggunakan `ProxyService` (`services/proxyService.js`) untuk memutar IP proxy HTTPS secara round-robin via `https-proxy-agent`. Jika sebuah proxy mengalami kendala jaringan atau *timeout*, request akan dialihkan secara urut ke proxy berikutnya.
 
@@ -35,7 +35,7 @@ Bot Discord berbasis Node.js untuk pemantauan realtime jumlah pemain online Grow
 
 ### 3. Chart Rendering Engine (`services/chartService.js`)
 * **Chart Provider**: QuickChart API (`quickchart-js`).
-* **Aggregation**: Histori direduksi berdasarkan jendela timeframe yang dipilih pengguna (1, 3, 5, 15, 30, 60, atau 1440 menit).
+* **Aggregation**: Histori direduksi menggunakan *bucket averaging downsampling* berdasarkan jendela timeframe yang dipilih pengguna (1, 3, 5, 15, 30, 60, atau 1440 menit). Untuk timeframe $\le 5$ menit, timestamp sumbu X menyertakan format detik (`HH:mm:ss`).
 * **Styles**: Mendukung multiple konfigurasi visual Chart.js (mis. `fill_value`, `sparkline`, `stepped_line`, `bubble`, `horizontal_bar`, dll.).
 
 ### 4. Discord Interaction & Commands (`commands/`)
@@ -47,7 +47,7 @@ Bot Discord berbasis Node.js untuk pemantauan realtime jumlah pemain online Grow
 * Menghitung persentase perubahan pemain antara record terakhir dan record sebelumnya:
   $$\Delta\% = \frac{\text{Count}_{\text{new}} - \text{Count}_{\text{prev}}}{\text{Count}_{\text{prev}}} \times 100$$
 * **Kondisi Notifikasi**:
-  * $\Delta\% < -1.0\%$: Terdeteksi penurunan drastis (Ban Rate / Drop). Mengirim notifikasi dengan mention `@everyone` yang secara otomatis dihapus dari konten pesan setelah jeda 1 detik (`setTimeout 1000ms`).
+  * $\Delta\% < -1.0\%$: Terdeteksi penurunan drastis (Ban Rate / Drop). Mengirim notifikasi dengan mention `@everyone` yang secara otomatis dihapus dari konten pesan setelah jeda 5 detik (`setTimeout 5000ms`).
   * $\Delta\% > 1.0\%$: Terdeteksi lonjakan pemain (Player Surge).
   * $-0.8\% \le \Delta\% \le 0.8\%$: Kondisi normal / stabil.
 
@@ -86,8 +86,8 @@ Bot Discord berbasis Node.js untuk pemantauan realtime jumlah pemain online Grow
 | :--- | :--- | :--- |
 | `TOKEN` | `string` | Discord Bot Token dari Discord Developer Portal |
 | `CLIENT_ID` | `string` | Application Client ID untuk registrasi Slash Commands |
-| `FETCH_INTERVAL` | `number` | Interval polling API Growtopia (dalam milidetik) |
-| `EMBED_UPDATE_INTERVAL` | `number` | Interval pembaruan UI Embed Discord (dalam milidetik) |
+| `FETCH_INTERVAL` | `number` | Interval polling API Growtopia (dalam milidetik, min: 5000ms) |
+| `EMBED_UPDATE_INTERVAL` | `number` | Interval pembaruan UI Embed Discord (dalam milidetik, min: 5000ms) |
 | `DB_PATH` | `string` | Jalur relatif file penyimpanan data JSON |
 | `MAX_HISTORY_MS` | `number` | Batas maksimum usia simpan data histori (dalam milidetik) |
 
@@ -105,14 +105,14 @@ Inisialisasi Database Sync & Proxy List
 Login Discord REST API & Registrasi Slash Commands
       │
       ▼
-Polling Loop (`setInterval`)
+Polling Loop (`setInterval`, min 5000ms)
       │
       ├─► Fetch Online Players via HTTP Proxy (Failover Loop)
       │         │
       │         ▼
       ├─► Hitung Fluktuasi vs Record Terakhir
       │         │
-      │         ├─► [Jika Δ% < -1.0%]: Send Alert + Tag @everyone -> Delete Tag after 1s
+      │         ├─► [Jika Δ% < -1.0%]: Send Alert + Tag @everyone -> Delete Tag after 5s
       │         └─► [Jika Δ% > 1.0%]: Send Alert Normal
       │
       ├─► Simpan Record Baru ke `data.json` & Purge Data Old
