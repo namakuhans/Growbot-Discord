@@ -71,18 +71,38 @@ client.once('ready', async () => {
   // Registrasi Slash Commands
   await registerCommands();
 
-  // Polling Data Player
-  setInterval(async () => {
-    const count = await fetchOnlinePlayers();
-    if (count !== null) {
-      updateBotPresence(count);
+  // Dynamic Polling Loop: Interval menyesuaikan secara dinamis berdasarkan perubahan data
+  const MIN_INTERVAL = config.FETCH_INTERVAL || 5000; // Interval cepat saat data berubah
+  const MAX_INTERVAL = 30000;                          // Interval lambat saat data stabil
+  let currentInterval = MIN_INTERVAL;
 
-      await checkAndSendNotification(client, count);
-      db.addHistoryRecord(count);
-      await renderAndEditEmbed(client);
-      lastKnownPlayerCount = count;
+  async function poll() {
+    try {
+      const count = await fetchOnlinePlayers();
+      if (count !== null) {
+        updateBotPresence(count);
+
+        if (lastKnownPlayerCount === null || count !== lastKnownPlayerCount) {
+          // Ada perubahan data: Update embed & notif instan, reset interval ke paling cepat
+          await checkAndSendNotification(client, count);
+          db.addHistoryRecord(count);
+          await renderAndEditEmbed(client);
+          lastKnownPlayerCount = count;
+          currentInterval = MIN_INTERVAL;
+        } else {
+          // Data stabil: Tingkatkan interval secara bertahap
+          currentInterval = Math.min(Math.round(currentInterval * 1.5), MAX_INTERVAL);
+        }
+      }
+    } catch (err) {
+      console.error('[Polling Error]', err.message);
+    } finally {
+      setTimeout(poll, currentInterval);
     }
-  }, config.FETCH_INTERVAL || 60000);
+  }
+
+  // Mulai perulangan polling dinamis
+  poll();
 });
 
 // =================================================================
