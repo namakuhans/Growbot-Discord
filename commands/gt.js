@@ -4,6 +4,9 @@ const { fetchOnlinePlayers } = require('../services/fetcher');
 const { generateChartUrl, formatTimeframeLabel, getStyleLabel } = require('../services/chartService');
 const { createMonitoringComponents } = require('../components/buttons');
 
+const THUMBNAIL_URL = 'https://cdn.discordapp.com/attachments/1407966960498642965/1407967063657681037/Proyek_Baru_121_B8AF8E8.gif?ex=6a80a8c2&is=6a7f5742&hm=1e1d6578de692';
+
+// Helper format string waktu lokal WIB (UTC+7)
 function getWibTimestampString() {
   const now = new Date();
   const options = {
@@ -64,9 +67,6 @@ module.exports = {
       const currentUnixSec = Math.floor(Date.now() / 1000);
       const customWibTimeStr = getWibTimestampString();
 
-      // Gambar Thumbnail dari Profil Avatar Bot Secara Dinamis
-      const botAvatarUrl = interaction.client.user.displayAvatarURL({ extension: 'png', dynamic: true, size: 512 });
-
       const embed = new EmbedBuilder()
         .setTitle('<a:emoji_11:1342592665337856021> 𝗚𝗿𝗼𝘄𝘁𝗼𝗽𝗶𝗮 𝗟𝗶𝘃𝗲 𝗦𝗲𝗿𝘃𝗲𝗿 𝗠𝗼𝗻𝗶𝘁𝗼𝗿𝗶𝗻𝗴')
         .setDescription(
@@ -76,7 +76,7 @@ module.exports = {
           'Contact Developer: <@758224726526656513>'
         )
         .setColor('#FF3333')
-        .setThumbnail(botAvatarUrl)
+        .setThumbnail(THUMBNAIL_URL)
         .addFields(
           { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
           { name: '<a:emoji_23:1349148026400276500> 𝗧𝗜𝗠𝗘𝗙𝗥𝗔𝗠𝗘 𝗚𝗥𝗔𝗣𝗛𝗜𝗖', value: `\`${timeframeText}\``, inline: true },
@@ -84,6 +84,7 @@ module.exports = {
           { name: '<a:emoji_23:1349148026400276500> **Last Update**', value: `<t:${currentUnixSec}:R>`, inline: false }
         )
         .setImage(chartUrl)
+        // Tanpa .setTimestamp() bawaan
         .setFooter({ text: `! iHannsy A.K.A MasPakan - Aurhelana ©\nGrowtopia Server Stats - ${customWibTimeStr}` });
 
       const replyMessage = await interaction.editReply({
