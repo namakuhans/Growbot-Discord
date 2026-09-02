@@ -1,16 +1,15 @@
 const { EmbedBuilder } = require('discord.js');
 const db = require('./database');
-const { generateChartUrl, formatTimeframeLabel, getStyleLabel, getDynamicColorConfig } = require('./chartService');
+const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./chartService');
 const { createMonitoringComponents } = require('../components/buttons');
 const { getWibTimestampString } = require('../utils/time');
 
-function buildMonitoringPayload(client, timeframeMinutes, styleOption) {
+function buildMonitoringPayload(client, styleOption) {
   const history = db.getHistory();
   const latestCount = history.length > 0 ? history[history.length - 1].count : 0;
 
-  const colorConfig = getDynamicColorConfig(history, timeframeMinutes, styleOption);
-  const chartUrl = generateChartUrl(history, timeframeMinutes, styleOption, colorConfig);
-  const timeframeText = formatTimeframeLabel(timeframeMinutes);
+  const colorConfig = getDynamicColorConfig(history, styleOption);
+  const chartUrl = generateChartUrl(history, styleOption, colorConfig);
   const styleDisplayLabel = getStyleLabel(styleOption);
 
   const currentUnixSec = Math.floor(Date.now() / 1000);
@@ -30,7 +29,6 @@ function buildMonitoringPayload(client, timeframeMinutes, styleOption) {
     .setThumbnail(botAvatarUrl)
     .addFields(
       { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
-      { name: '<a:emoji_23:1349148026400276500> 𝗧𝗜𝗠𝗘𝗙𝗥𝗔𝗠E 𝗚𝗥𝗔𝗣𝗛𝗜𝗖', value: `\`${timeframeText}\``, inline: true },
       { name: '<a:emoji_22:1349147982498500824> 𝗩𝗜𝗦𝗨𝗔𝗟 𝗦𝗧𝗬𝗟𝗘', value: `\`${styleDisplayLabel}\``, inline: true },
       { name: '<a:emoji_23:1349148026400276500> **Last Update**', value: `<t:${currentUnixSec}:R>`, inline: false }
     )
@@ -39,7 +37,7 @@ function buildMonitoringPayload(client, timeframeMinutes, styleOption) {
 
   return {
     embeds: [embed],
-    components: createMonitoringComponents(timeframeMinutes, styleOption)
+    components: createMonitoringComponents(styleOption)
   };
 }
 
@@ -48,7 +46,6 @@ async function renderAndEditEmbed(client) {
   if (!active) return;
 
   const currentStyle = active.style || 'fill_value';
-  const currentTimeframe = Number(active.timeframe) || 60;
 
   try {
     const channel = await client.channels.fetch(active.channelId).catch(() => null);
@@ -57,7 +54,7 @@ async function renderAndEditEmbed(client) {
     const message = await channel.messages.fetch(active.messageId).catch(() => null);
     if (!message) return;
 
-    const payload = buildMonitoringPayload(client, currentTimeframe, currentStyle);
+    const payload = buildMonitoringPayload(client, currentStyle);
     await message.edit(payload);
   } catch (err) {
     console.error('[Discord Error] Edit Embed Failure:', err.message);

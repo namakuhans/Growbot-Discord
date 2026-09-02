@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../services/database');
 const { fetchOnlinePlayers } = require('../services/fetcher');
-const { generateChartUrl, formatTimeframeLabel, getStyleLabel, getDynamicColorConfig } = require('../services/chartService');
+const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('../services/chartService');
 const { createMonitoringComponents } = require('../components/buttons');
 
 const { getWibTimestampString } = require('../utils/time');
@@ -22,12 +22,10 @@ module.exports = {
 
       const history = db.getHistory();
       const latestCount = history.length > 0 ? history[history.length - 1].count : 0;
-      const defaultTimeframe = 60;
       const defaultStyle = 'fill_value';
       
-      const colorConfig = getDynamicColorConfig(history, defaultTimeframe, defaultStyle);
-      const chartUrl = generateChartUrl(history, defaultTimeframe, defaultStyle, colorConfig);
-      const timeframeText = formatTimeframeLabel(defaultTimeframe);
+      const colorConfig = getDynamicColorConfig(history, defaultStyle);
+      const chartUrl = generateChartUrl(history, defaultStyle, colorConfig);
       const styleDisplayLabel = getStyleLabel(defaultStyle);
 
       const currentUnixSec = Math.floor(Date.now() / 1000);
@@ -48,7 +46,6 @@ module.exports = {
         .setThumbnail(botAvatarUrl)
         .addFields(
           { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
-          { name: '<a:emoji_23:1349148026400276500> 𝗧𝗜𝗠𝗘𝗙𝗥𝗔𝗠𝗘 𝗚𝗥𝗔𝗣𝗛𝗜𝗖', value: `\`${timeframeText}\``, inline: true },
           { name: '<a:emoji_22:1349147982498500824> 𝗩𝗜𝗦𝗨𝗔𝗟 𝗦𝗧𝗬𝗟𝗘', value: `\`${styleDisplayLabel}\``, inline: true },
           { name: '<a:emoji_23:1349148026400276500> **Last Update**', value: `<t:${currentUnixSec}:R>`, inline: false }
         )
@@ -57,10 +54,10 @@ module.exports = {
 
       const replyMessage = await interaction.editReply({
         embeds: [embed],
-        components: createMonitoringComponents(defaultTimeframe, defaultStyle)
+        components: createMonitoringComponents(defaultStyle)
       });
 
-      db.setActiveMonitoring(interaction.channelId, replyMessage.id, defaultTimeframe, defaultStyle);
+      db.setActiveMonitoring(interaction.channelId, replyMessage.id, 60, defaultStyle);
 
     } catch (err) {
       console.error('[Command Error] Failed to execute /gt:', err.message);
