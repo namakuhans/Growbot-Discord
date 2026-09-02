@@ -74,6 +74,19 @@ class ProxyService {
     }
   }
 
+  clearProxies() {
+    try {
+      fs.writeFileSync(this.filePath, '', 'utf8');
+      this.proxies = [];
+      this.currentIndex = 0;
+      console.log('[ProxyService] Semua proxy berhasil dihapus.');
+      return true;
+    } catch (err) {
+      console.error('[ProxyService Error] Gagal menghapus proxies.txt:', err.message);
+      return false;
+    }
+  }
+
   getAgent() {
     if (this.proxies.length === 0) return null;
     const proxyUrl = this.proxies[this.currentIndex];

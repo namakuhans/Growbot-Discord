@@ -6,6 +6,7 @@ const { generateChartUrl, formatTimeframeLabel, getStyleLabel } = require('./ser
 const { createMonitoringComponents } = require('./components/buttons');
 const gtCommand = require('./commands/gt');
 const proxyCommand = require('./commands/proxy');
+const delproxyCommand = require('./commands/delproxy');
 const notifCommand = require('./commands/notif');
 
 // Cache jumlah player terakhir guna mendeteksi perubahan
@@ -223,9 +224,9 @@ client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(config.TOKEN);
     await rest.put(
       Routes.applicationCommands(config.CLIENT_ID),
-      { body: [gtCommand.data.toJSON(), proxyCommand.data.toJSON(), notifCommand.data.toJSON()] }
+      { body: [gtCommand.data.toJSON(), proxyCommand.data.toJSON(), delproxyCommand.data.toJSON(), notifCommand.data.toJSON()] }
     );
-    console.log('[System] Slash Commands (/gt, /proxy, /notif) successfully registered.');
+    console.log('[System] Slash Commands (/gt, /proxy, /delproxy, /notif) successfully registered.');
   } catch (err) {
     console.error('[System Error] Failed to register commands:', err.message);
   }
@@ -273,6 +274,8 @@ client.on('interactionCreate', async (interaction) => {
         await gtCommand.execute(interaction);
       } else if (interaction.commandName === 'proxy') {
         await proxyCommand.execute(interaction);
+      } else if (interaction.commandName === 'delproxy') {
+        await delproxyCommand.execute(interaction);
       } else if (interaction.commandName === 'notif') {
         await notifCommand.execute(interaction);
       }
