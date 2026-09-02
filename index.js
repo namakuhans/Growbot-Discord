@@ -77,12 +77,10 @@ client.once('ready', async () => {
     if (count !== null) {
       updateBotPresence(count);
 
-      if (lastKnownPlayerCount === null || count !== lastKnownPlayerCount) {
-        await checkAndSendNotification(client, count);
-        db.addHistoryRecord(count);
-        await renderAndEditEmbed(client);
-        lastKnownPlayerCount = count;
-      }
+      await checkAndSendNotification(client, count);
+      db.addHistoryRecord(count);
+      await renderAndEditEmbed(client);
+      lastKnownPlayerCount = count;
     }
   }, config.FETCH_INTERVAL || 60000);
 });

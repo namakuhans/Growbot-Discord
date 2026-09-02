@@ -11,18 +11,14 @@ const VIBRANT_PALETTE = [
   { hex: '#FF00E5', rgb: '255, 0, 229' }    // Hot Magenta
 ];
 
-// Mendapatkan konfigurasi warna dinamis yang sinkron berdasarkan kombinasi data/timeframe/style
-function getDynamicColorConfig(history = [], timeframeMinutes = 60, styleOption = 'fill_value') {
-  // Hitung seed dinamis berdasarkan timestamp record terakhir dan total count
+// Mendapatkan konfigurasi warna dinamis yang sinkron berdasarkan kombinasi data/style
+function getDynamicColorConfig(history = [], styleOption = 'fill_value') {
   let seed = 0;
   if (history && history.length > 0) {
     const last = history[history.length - 1];
-    seed = (last.timestamp || 0) + (last.count || 0) + Number(timeframeMinutes);
-  } else {
-    seed = Number(timeframeMinutes);
+    seed = (last.timestamp || 0) + (last.count || 0);
   }
 
-  // Hash sederhana untuk memilih warna konsisten
   const index = Math.abs(seed) % VIBRANT_PALETTE.length;
   const palette = VIBRANT_PALETTE[index];
 
@@ -52,25 +48,11 @@ function getStyleLabel(styleKey) {
   return styleMap[styleKey] || 'Fill to Value';
 }
 
-function formatTimeframeLabel(minutes) {
-  if (minutes >= 1440) {
-    const days = Math.round(minutes / 1440);
-    return `${days} ${days > 1 ? 'Days' : 'Day'}`;
-  } else if (minutes >= 60) {
-    const hours = Math.round(minutes / 60);
-    return `${hours} ${hours > 1 ? 'Hours' : 'Hour'}`;
-  } else {
-    return `${minutes} ${minutes > 1 ? 'Minutes' : 'Minute'}`;
-  }
-}
-
-function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value', colorConfig = null) {
+function generateChartUrl(history, styleOption = 'fill_value', colorConfig = null) {
   try {
-    const colors = colorConfig || getDynamicColorConfig(history, timeframeMinutes, styleOption);
-    const now = Date.now();
-    const cutoff = now - (timeframeMinutes * 60 * 1000);
+    const colors = colorConfig || getDynamicColorConfig(history, styleOption);
     
-    let filteredData = (history || []).filter(item => item && typeof item.count === 'number' && item.timestamp >= cutoff);
+    let filteredData = (history || []).filter(item => item && typeof item.count === 'number');
 
     if (filteredData.length === 0 && Array.isArray(history) && history.length > 0) {
       const validItem = history[history.length - 1];
@@ -79,38 +61,29 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
       }
     }
 
-    // Downsampling dengan Bucket Averaging jika data point melebihi MAX_POINTS
-    const MAX_POINTS = 12;
+    // Ambil 20 data point paling baru agar grafik bergerak secara real-time pada setiap fetch
+    const MAX_POINTS = 20;
     if (filteredData.length > MAX_POINTS) {
-      const bucketSize = filteredData.length / MAX_POINTS;
-      const sampled = [];
-      for (let i = 0; i < MAX_POINTS; i++) {
-        const startIdx = Math.floor(i * bucketSize);
-        const endIdx = Math.min(Math.floor((i + 1) * bucketSize), filteredData.length);
-        const bucket = filteredData.slice(startIdx, endIdx);
-        if (bucket.length > 0) {
-          const avgCount = Math.round(bucket.reduce((sum, item) => sum + item.count, 0) / bucket.length);
-          const reprTimestamp = bucket[bucket.length - 1].timestamp;
-          sampled.push({ timestamp: reprTimestamp, count: avgCount });
-        }
-      }
-      filteredData = sampled;
+      filteredData = filteredData.slice(-MAX_POINTS);
     }
 
-    // Format label sumbu X (sertakan detik untuk timeframe <= 5 menit)
-    const includeSeconds = timeframeMinutes <= 5;
     const labels = filteredData.map(item => {
       const date = new Date(item.timestamp);
       const hh = date.getHours().toString().padStart(2, '0');
       const mm = date.getMinutes().toString().padStart(2, '0');
-      if (includeSeconds) {
-        const ss = date.getSeconds().toString().padStart(2, '0');
-        return `${hh}:${mm}:${ss}`;
-      }
-      return `${hh}:${mm}`;
+      const ss = date.getSeconds().toString().padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
     });
 
     const dataPoints = filteredData.map(item => item.count);
+
+    // Hitung min/max dinamis beserta padding agar pergerakan fluktuasi terlihat jelas
+    const minVal = dataPoints.length > 0 ? Math.min(...dataPoints) : 0;
+    const maxVal = dataPoints.length > 0 ? Math.max(...dataPoints) : 100;
+    const valRange = maxVal - minVal;
+    const padding = valRange === 0 ? Math.max(Math.round(minVal * 0.02), 5) : Math.max(Math.round(valRange * 0.15), 5);
+    const suggestedMin = Math.max(0, minVal - padding);
+    const suggestedMax = maxVal + padding;
 
     const chart = new QuickChart();
     chart.setBackgroundColor('#ffffff');
@@ -118,7 +91,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
     chart.setHeight(300);
 
     const latestVal = dataPoints.length > 0 ? dataPoints[dataPoints.length - 1] : 0;
-    const titleLabel = `Online Players: ${latestVal.toLocaleString()} (${formatTimeframeLabel(timeframeMinutes)})`;
+    const titleLabel = `Online Players: ${latestVal.toLocaleString()}`;
 
     switch (styleOption) {
       case 'bubble':
@@ -289,7 +262,8 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
           options: {
             scales: {
               y: {
-                beginAtZero: false
+                suggestedMin: suggestedMin,
+                suggestedMax: suggestedMax
               }
             }
           }

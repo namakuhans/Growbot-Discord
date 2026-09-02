@@ -24,22 +24,18 @@ async function handleInteraction(interaction) {
       const active = db.getActiveMonitoring() || {
         channelId: interaction.channelId,
         messageId: interaction.message.id,
-        timeframe: 60,
         style: 'fill_value'
       };
 
-      let newTimeframe = Number(active.timeframe) || 60;
       let newStyle = active.style || 'fill_value';
 
-      if (interaction.customId === 'select_timeframe') {
-        newTimeframe = parseInt(interaction.values[0], 10);
-      } else if (interaction.customId === 'select_style') {
+      if (interaction.customId === 'select_style') {
         newStyle = interaction.values[0];
       }
 
-      db.setActiveMonitoring(interaction.channelId, interaction.message.id, newTimeframe, newStyle);
+      db.setActiveMonitoring(interaction.channelId, interaction.message.id, 60, newStyle);
 
-      const payload = buildMonitoringPayload(interaction.client, newTimeframe, newStyle);
+      const payload = buildMonitoringPayload(interaction.client, newStyle);
       await interaction.message.edit(payload);
     }
   } catch (err) {

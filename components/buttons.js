@@ -1,6 +1,6 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
-function createMonitoringComponents(selectedTimeframe = '60', selectedStyle = 'fill_value') {
+function createMonitoringComponents(selectedStyle = 'fill_value') {
   const styleStr = String(selectedStyle);
 
   // Select Menu: Tampilan Gaya Chart
