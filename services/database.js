@@ -77,6 +77,12 @@ class DatabaseService {
   getHistory() {
     return this.data.history || [];
   }
+
+  resetData() {
+    this.data = { activeMonitoring: null, notificationChannelId: null, history: [] };
+    this.save();
+    return true;
+  }
 }
 
 module.exports = new DatabaseService();

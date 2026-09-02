@@ -8,7 +8,7 @@ const { getWibTimestampString } = require('../utils/time');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('gt')
+    .setName('stats')
     .setDescription('Display real-time Growtopia player monitoring dashboard'),
 
   async execute(interaction) {
@@ -60,7 +60,7 @@ module.exports = {
       db.setActiveMonitoring(interaction.channelId, replyMessage.id, 60, defaultStyle);
 
     } catch (err) {
-      console.error('[Command Error] Failed to execute /gt:', err.message);
+      console.error('[Command Error] Failed to execute /stats:', err.message);
       if (interaction.deferred || interaction.replied) {
         await interaction.followUp({ content: '❌ An error occurred while loading GT monitoring.', ephemeral: true }).catch(() => {});
       }
