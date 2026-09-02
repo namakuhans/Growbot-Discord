@@ -37,7 +37,7 @@ function getDynamicColorConfig(history = [], timeframeMinutes = 60, styleOption 
 // Map nama variabel internal ke nama tampilan label Dropdown
 function getStyleLabel(styleKey) {
   const styleMap = {
-    'fill_value': 'Fill to Value (Chart.js v3)',
+    'fill_value': 'Fill to Value',
     'bubble': 'Bubble Chart',
     'sparkline': 'Sparkline',
     'horizontal_bar': 'Horizontal Bar',
@@ -49,7 +49,7 @@ function getStyleLabel(styleKey) {
     'formatted_numbers': 'Formatted Numbers',
     'vertical_axis': 'Vertical Axis Labels'
   };
-  return styleMap[styleKey] || 'Fill to Value (Chart.js v3)';
+  return styleMap[styleKey] || 'Fill to Value';
 }
 
 function formatTimeframeLabel(minutes) {
@@ -138,7 +138,10 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
               }))
             }]
           },
-          options: { title: { display: true, text: 'Chart.js Bubble Chart' } }
+          options: {
+            title: { display: true, text: 'Chart.js Bubble Chart' },
+            scales: { yAxes: [{ ticks: { beginAtZero: false } }] }
+          }
         });
         break;
 
@@ -162,7 +165,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
           },
           options: {
             scales: {
-              xAxes: [{ gridLines: { display: true, drawOnChartArea: false, color: 'black' }, ticks: { fontColor: 'black', beginAtZero: true } }],
+              xAxes: [{ gridLines: { display: true, drawOnChartArea: false, color: 'black' }, ticks: { fontColor: 'black', beginAtZero: false } }],
               yAxes: [{ display: true, gridLines: { display: true, drawOnChartArea: false, color: 'black' }, ticks: { fontColor: 'black' } }]
             },
             legend: { display: false }
@@ -178,7 +181,10 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
             labels: labels.length > 0 ? labels : ['1'],
             datasets: [{ label: titleLabel, steppedLine: true, data: dataPoints, borderColor: colors.borderColor, fill: false }]
           },
-          options: { title: { display: true, text: 'Stepped line' } }
+          options: {
+            title: { display: true, text: 'Stepped line' },
+            scales: { yAxes: [{ ticks: { beginAtZero: false } }] }
+          }
         });
         break;
 
@@ -193,7 +199,8 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
           options: {
             title: { display: true, text: 'Point Style: circle' },
             legend: { display: false },
-            elements: { point: { pointStyle: 'circle' } }
+            elements: { point: { pointStyle: 'circle' } },
+            scales: { yAxes: [{ ticks: { beginAtZero: false } }] }
           }
         });
         break;
@@ -210,7 +217,8 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
           options: {
             title: { display: true, text: 'Point Style: triangle' },
             legend: { display: false },
-            elements: { point: { pointStyle: 'triangle' } }
+            elements: { point: { pointStyle: 'triangle' } },
+            scales: { yAxes: [{ ticks: { beginAtZero: false } }] }
           }
         });
         break;
@@ -223,7 +231,10 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
             labels: labels.length > 0 ? labels : ['1'],
             datasets: [{ backgroundColor: colors.backgroundColor, borderColor: colors.borderColor, data: dataPoints, label: titleLabel, fill: false }]
           },
-          options: { title: { text: 'fill: false', display: true } }
+          options: {
+            title: { text: 'fill: false', display: true },
+            scales: { yAxes: [{ ticks: { beginAtZero: false } }] }
+          }
         });
         break;
 
@@ -236,7 +247,7 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
             datasets: [{ label: titleLabel, backgroundColor: colors.solidBackgroundColor, borderColor: colors.borderColor, data: dataPoints, fill: false }]
           },
           options: {
-            scales: { yAxes: [{ ticks: { beginAtZero: true, callback: (val) => val.toLocaleString() + ' Players' } }] }
+            scales: { yAxes: [{ ticks: { beginAtZero: false, callback: (val) => val.toLocaleString() + ' Players' } }] }
           }
         });
         break;
@@ -250,7 +261,10 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
             datasets: [{ label: titleLabel, backgroundColor: colors.solidBackgroundColor, borderColor: colors.borderColor, data: dataPoints, fill: false }]
           },
           options: {
-            scales: { xAxes: [{ ticks: { minRotation: 90 } }] }
+            scales: {
+              xAxes: [{ ticks: { minRotation: 90 } }],
+              yAxes: [{ ticks: { beginAtZero: false } }]
+            }
           }
         });
         break;
@@ -271,6 +285,13 @@ function generateChartUrl(history, timeframeMinutes, styleOption = 'fill_value',
               backgroundColor: colors.backgroundColor,
               fill: { target: { value: avgVal }, above: 'transparent', below: colors.backgroundColor }
             }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: false
+              }
+            }
           }
         });
         break;
