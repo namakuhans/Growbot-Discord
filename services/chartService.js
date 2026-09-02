@@ -281,4 +281,4 @@ function generateChartUrl(history, styleOption = 'fill_value', colorConfig = nul
   }
 }
 
-module.exports = { generateChartUrl, formatTimeframeLabel, getStyleLabel, getDynamicColorConfig };
+module.exports = { generateChartUrl, getStyleLabel, getDynamicColorConfig };
