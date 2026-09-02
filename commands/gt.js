@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../services/database');
 const { fetchOnlinePlayers } = require('../services/fetcher');
-const { generateChartUrl, formatTimeframeLabel, getStyleLabel } = require('../services/chartService');
+const { generateChartUrl, formatTimeframeLabel, getStyleLabel, getDynamicColorConfig } = require('../services/chartService');
 const { createMonitoringComponents } = require('../components/buttons');
 
 const { getWibTimestampString } = require('../utils/time');
@@ -25,7 +25,8 @@ module.exports = {
       const defaultTimeframe = 60;
       const defaultStyle = 'fill_value';
       
-      const chartUrl = generateChartUrl(history, defaultTimeframe, defaultStyle);
+      const colorConfig = getDynamicColorConfig(history, defaultTimeframe, defaultStyle);
+      const chartUrl = generateChartUrl(history, defaultTimeframe, defaultStyle, colorConfig);
       const timeframeText = formatTimeframeLabel(defaultTimeframe);
       const styleDisplayLabel = getStyleLabel(defaultStyle);
 
@@ -43,7 +44,7 @@ module.exports = {
           'Need a custom bot or selfbot for your server, business, or project automation?\n' +
           'Contact Developer: <@758224726526656513>'
         )
-        .setColor('#FF3333')
+        .setColor(colorConfig.hex)
         .setThumbnail(botAvatarUrl)
         .addFields(
           { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
