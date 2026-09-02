@@ -244,7 +244,7 @@ client.once('ready', async () => {
         lastKnownPlayerCount = count;
       }
     }
-  }, config.FETCH_INTERVAL);
+  }, fetchInterval);
 });
 
 // =================================================================
