@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, ActivityType, Options } = require('discord.js');
 const config = require('./config/config');
 const db = require('./services/database');
 const { fetchOnlinePlayers } = require('./services/fetcher');
@@ -23,7 +23,24 @@ process.on('uncaughtException', (err) => {
 // =================================================================
 // 2. DISCORD CLIENT INITIALIZATION
 // =================================================================
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds],
+  makeCache: Options.cacheWithLimits({
+    ...Options.DefaultMakeCacheSettings,
+    MessageManager: 0,
+    StageInstanceManager: 0,
+    PresenceManager: 0,
+    ReactionManager: 0,
+    ThreadManager: 0,
+    ThreadMemberManager: 0,
+    GuildBanManager: 0,
+    GuildInviteManager: 0,
+    GuildScheduledEventManager: 0,
+    VoiceStateManager: 0,
+    GuildStickerManager: 0,
+    GuildEmojiManager: 0
+  })
+});
 
 // =================================================================
 // 3. HELPER DYNAMIC BOT RPC (WATCHING ONLINE PLAYERS)
