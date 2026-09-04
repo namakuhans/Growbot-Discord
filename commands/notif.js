@@ -4,26 +4,35 @@ const db = require('../services/database');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('notif')
-    .setDescription('Set a channel for automated Growtopia player fluctuation notifications')
+    .setDescription('Set channel dan role opsional untuk notifikasi fluktuasi player')
     .addChannelOption(option =>
       option.setName('channel')
-        .setDescription('The channel where notifications will be sent')
+        .setDescription('Channel tempat notifikasi akan dikirimkan')
         .setRequired(true)
+    )
+    .addRoleOption(option =>
+      option.setName('role')
+        .setDescription('Role yang akan di-mention saat notifikasi (opsional, default: @everyone)')
+        .setRequired(false)
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
   async execute(interaction) {
     try {
       const channel = interaction.options.getChannel('channel');
+      const role = interaction.options.getRole('role');
 
       if (!channel.isTextBased()) {
-        return interaction.reply({ content: '❌ Please select a valid text channel!', ephemeral: true });
+        return interaction.reply({ content: '❌ Mohon pilih channel teks yang valid!', ephemeral: true });
       }
 
-      db.setNotificationChannel(channel.id);
+      const roleId = role ? role.id : null;
+      db.setNotificationConfig(channel.id, roleId);
+
+      const roleMentionText = role ? `<@&${role.id}>` : '`@everyone`';
 
       await interaction.reply({
-        content: `✅ Notification channel successfully set to <#${channel.id}>! Real-time alerts will be sent there.`,
+        content: `✅ Channel notifikasi berhasil diatur ke <#${channel.id}> dengan tag mention ${roleMentionText}!`,
         ephemeral: true
       });
     } catch (err) {
