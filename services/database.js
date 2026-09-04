@@ -26,13 +26,14 @@ class DatabaseService {
         this.data = {
           activeMonitoring: parsed.activeMonitoring || null,
           notificationChannelId: parsed.notificationChannelId || null,
+          notificationRoleId: parsed.notificationRoleId || null,
           history: Array.isArray(parsed.history) ? parsed.history : []
         };
         console.log('[DB] Database lokal berhasil dimuat.');
       }
     } catch (err) {
       console.error('[DB Error] Gagal membaca file database:', err.message);
-      this.data = { activeMonitoring: null, notificationChannelId: null, history: [] };
+      this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, history: [] };
     }
   }
 
@@ -80,12 +81,25 @@ class DatabaseService {
     return this.data.notificationChannelId;
   }
 
+  setNotificationConfig(channelId, roleId = null) {
+    this.data.notificationChannelId = channelId;
+    this.data.notificationRoleId = roleId;
+    this.save();
+  }
+
+  getNotificationConfig() {
+    return {
+      channelId: this.data.notificationChannelId || null,
+      roleId: this.data.notificationRoleId || null
+    };
+  }
+
   getHistory() {
     return this.data.history || [];
   }
 
   resetData() {
-    this.data = { activeMonitoring: null, notificationChannelId: null, history: [] };
+    this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, history: [] };
     this.save();
     return true;
   }

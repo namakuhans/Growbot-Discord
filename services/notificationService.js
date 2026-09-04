@@ -1,8 +1,9 @@
 const db = require('./database');
 
 async function checkAndSendNotification(client, newCount) {
-  const channelId = db.getNotificationChannel();
-  if (!channelId) return;
+  const notifConfig = db.getNotificationConfig();
+  if (!notifConfig || !notifConfig.channelId) return;
+  const channelId = notifConfig.channelId;
 
   const history = db.getHistory();
   if (history.length === 0) return;
@@ -39,7 +40,8 @@ async function checkAndSendNotification(client, newCount) {
   const currentUnixSec = Math.floor(Date.now() / 1000);
   const contentBody = `**${emoji} [<t:${currentUnixSec}:T>] ${statusText} ${arrow} (${prevCount.toLocaleString()} → ${newCount.toLocaleString()} / ${formattedPercent})**`;
 
-  const finalMessage = isBanned ? `@everyone\n${contentBody}` : contentBody;
+  const mentionTag = notifConfig.roleId ? `<@&${notifConfig.roleId}>` : '@everyone';
+  const finalMessage = isBanned ? `${mentionTag}\n${contentBody}` : contentBody;
 
   try {
     const channel = await client.channels.fetch(channelId).catch(() => null);
