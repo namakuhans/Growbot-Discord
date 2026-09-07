@@ -4,6 +4,8 @@ const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./ch
 const { createStyleSelectMenu } = require('../components/buttons');
 const { getWibTimestampString } = require('../utils/time');
 
+const BANNER_GIF_URL = 'https://cdn.discordapp.com/attachments/1407966960498642965/1410705503692132503/Proyek_Baru_129_F60CEC6.gif?ex=6aa05fe1&is=6a9f0e61&hm=890a3db8446f16fefa0a0031334b91fa5cbfee39700f02f0628b055a1a523a8d&';
+
 function buildMonitoringPayload(client, styleOption) {
   const history = db.getHistory();
   const latestCount = history.length > 0 ? history[history.length - 1].count : 0;
@@ -44,11 +46,12 @@ function buildMonitoringPayload(client, styleOption) {
     .addMediaGalleryComponents((gallery) =>
       gallery.addItems((item) => item.setURL(chartUrl))
     )
-    .addSeparatorComponents((separator) => separator)
     .addActionRowComponents((actionRow) =>
       actionRow.setComponents(createStyleSelectMenu(styleOption))
     )
-    .addSeparatorComponents((separator) => separator)
+    .addMediaGalleryComponents((gallery) =>
+      gallery.addItems((item) => item.setURL(BANNER_GIF_URL))
+    )
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(`-# ! iHannsy A.K.A MasPakan - Aurhelana ©\n-# Growtopia Server Stats - ${customWibTimeStr}`)
     );
