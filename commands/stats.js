@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const db = require('../services/database');
 const { fetchOnlinePlayers } = require('../services/fetcher');
 const { buildMonitoringPayload } = require('../services/monitoringService');
@@ -10,7 +10,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
 
       const currentCount = await fetchOnlinePlayers();
       if (currentCount !== null) {
