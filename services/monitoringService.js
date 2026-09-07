@@ -1,8 +1,4 @@
-const {
-  ContainerBuilder,
-  MediaGalleryItemBuilder,
-  MessageFlags
-} = require('discord.js');
+const { ContainerBuilder, MessageFlags } = require('discord.js');
 const db = require('./database');
 const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./chartService');
 const { createStyleSelectMenu } = require('../components/buttons');
@@ -55,14 +51,14 @@ function buildMonitoringPayload(client, styleOption) {
       return section;
     })
     .addMediaGalleryComponents((gallery) =>
-      gallery.addItems(new MediaGalleryItemBuilder().setURL(chartUrl))
+      gallery.addItems((item) => item.setURL(chartUrl))
     )
     .addActionRowComponents((actionRow) =>
       actionRow.setComponents(createStyleSelectMenu(styleOption))
     )
     .addSeparatorComponents((separator) => separator)
     .addMediaGalleryComponents((gallery) =>
-      gallery.addItems(new MediaGalleryItemBuilder().setURL(BANNER_GIF_URL))
+      gallery.addItems((item) => item.setURL(BANNER_GIF_URL))
     )
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(`-# ! iHannsy A.K.A MasPakan - Aurhelana ©\n-# Growtopia Server Stats - ${customWibTimeStr}`)
