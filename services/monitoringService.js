@@ -40,12 +40,15 @@ function buildMonitoringPayload(client, styleOption) {
 
       return section;
     })
+    .addSeparatorComponents((separator) => separator)
     .addMediaGalleryComponents((gallery) =>
       gallery.addItems((item) => item.setURL(chartUrl))
     )
+    .addSeparatorComponents((separator) => separator)
     .addActionRowComponents((actionRow) =>
       actionRow.setComponents(createStyleSelectMenu(styleOption))
     )
+    .addSeparatorComponents((separator) => separator)
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(`-# ! iHannsy A.K.A MasPakan - Aurhelana ©\n-# Growtopia Server Stats - ${customWibTimeStr}`)
     );
