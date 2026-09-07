@@ -5,7 +5,7 @@ function createStyleSelectMenu(selectedStyle = 'fill_value') {
 
   return new StringSelectMenuBuilder()
     .setCustomId('select_style')
-    .setPlaceholder('🎨 Pilih Gaya Visualisasi Chart...')
+    .setPlaceholder('🎨 Pilih Menu Visual...')
     .addOptions(
       new StringSelectMenuOptionBuilder().setLabel('Fill to Value').setValue('fill_value').setDefault(styleStr === 'fill_value'),
       new StringSelectMenuOptionBuilder().setLabel('Bubble Chart').setValue('bubble').setDefault(styleStr === 'bubble'),
