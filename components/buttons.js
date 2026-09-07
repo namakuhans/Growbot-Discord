@@ -1,10 +1,9 @@
-const { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
-function createMonitoringComponents(selectedStyle = 'fill_value') {
+function createStyleSelectMenu(selectedStyle = 'fill_value') {
   const styleStr = String(selectedStyle);
 
-  // Select Menu: Tampilan Gaya Chart
-  const styleSelect = new StringSelectMenuBuilder()
+  return new StringSelectMenuBuilder()
     .setCustomId('select_style')
     .setPlaceholder('🎨 Pilih Gaya Visualisasi Chart...')
     .addOptions(
@@ -20,10 +19,6 @@ function createMonitoringComponents(selectedStyle = 'fill_value') {
       new StringSelectMenuOptionBuilder().setLabel('Formatted Numbers').setValue('formatted_numbers').setDefault(styleStr === 'formatted_numbers'),
       new StringSelectMenuOptionBuilder().setLabel('Vertical Axis Labels').setValue('vertical_axis').setDefault(styleStr === 'vertical_axis')
     );
-
-  const row = new ActionRowBuilder().addComponents(styleSelect);
-
-  return [row];
 }
 
-module.exports = { createMonitoringComponents };
+module.exports = { createStyleSelectMenu };
