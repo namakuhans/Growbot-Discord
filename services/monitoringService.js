@@ -39,6 +39,7 @@ function buildMonitoringPayload(client, styleOption) {
 
       return section;
     })
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(1))
     .addSectionComponents((section) => {
       section.addTextDisplayComponents(
         (textDisplay) => textDisplay.setContent('🛠️ **Custom Bot Development Services (Discord, Telegram & WhatsApp)**'),
