@@ -1,4 +1,4 @@
-const { ContainerBuilder, MessageFlags } = require('discord.js');
+const { ContainerBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const db = require('./database');
 const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./chartService');
 const { createStyleSelectMenu } = require('../components/buttons');
@@ -20,16 +20,16 @@ function buildMonitoringPayload(client, styleOption) {
   const botAvatarUrl = client.user ? client.user.displayAvatarURL({ extension: 'png', dynamic: true, size: 512 }) : null;
   const accentColorInt = parseInt(colorConfig.hex.replace('#', ''), 16);
 
+  const isServiceOpen = db.getServiceStatus();
+  const serviceButtonLabel = isServiceOpen ? 'SERVICES HERE!' : 'CLOSE SERVICES';
+
   const container = new ContainerBuilder()
     .setAccentColor(accentColorInt)
     .addSectionComponents((section) => {
       section.addTextDisplayComponents(
         (textDisplay) => textDisplay.setContent('# <a:emoji_11:1342592665337856021> 𝗚𝗿𝗼𝘄𝘁𝗼𝗽𝗶𝗮 𝗟𝗶𝘃𝗲 𝗦𝗲𝗿𝘃𝗲𝗿 𝗠𝗼𝗻𝗶𝘁𝗼𝗿𝗶𝗻𝗴'),
         (textDisplay) => textDisplay.setContent(
-          'Real-time statistics dashboard for monitoring active Growtopia online player counts with interactive charts.\n\n' +
-          '🛠️ **Custom Bot Development Services (Discord, Telegram & WhatsApp)**\n' +
-          'Need a custom bot or selfbot for your server, business, or project automation?\n' +
-          'Contact Developer: <@758224726526656513>'
+          'Real-time statistics dashboard for monitoring active Growtopia online player counts with interactive charts.'
         )
       );
 
@@ -39,7 +39,25 @@ function buildMonitoringPayload(client, styleOption) {
 
       return section;
     })
-    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(1))
+    .addSectionComponents((section) => {
+      section.addTextDisplayComponents(
+        (textDisplay) => textDisplay.setContent('🛠️ **Custom Bot Development Services (Discord, Telegram & WhatsApp)**'),
+        (textDisplay) => textDisplay.setContent(
+          'Butuh bot khusus atau selfbot untuk server, bisnis, atau otomatisasi proyek Anda?\n' +
+          'Silakan tekan tombol di samping untuk terhubung langsung dengan Developer!'
+        )
+      );
+
+      section.setButtonAccessory((button) =>
+        button
+          .setCustomId('btn_services')
+          .setLabel(serviceButtonLabel)
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      return section;
+    })
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
         `<a:online:1409290610870849609> **𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬**: \`${latestCount.toLocaleString()}\` Players\n` +
@@ -53,7 +71,7 @@ function buildMonitoringPayload(client, styleOption) {
     .addActionRowComponents((actionRow) =>
       actionRow.setComponents(createStyleSelectMenu(styleOption))
     )
-    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(1))
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
     .addMediaGalleryComponents((gallery) =>
       gallery.addItems((item) => item.setURL(BANNER_GIF_URL))
     )
