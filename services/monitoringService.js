@@ -52,7 +52,7 @@ function buildMonitoringPayload(client, styleOption) {
       section.setButtonAccessory((button) =>
         button
           .setCustomId('btn_services')
-          .setLabel(isServiceOpen ? 'SERVICES HERE!' : 'SERVICES CLOSED')
+          .setLabel(isServiceOpen ? 'Services' : 'Closed')
           .setEmoji(devEmoji)
           .setStyle(isServiceOpen ? ButtonStyle.Success : ButtonStyle.Secondary)
           .setDisabled(!isServiceOpen)
