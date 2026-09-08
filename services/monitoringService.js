@@ -1,8 +1,10 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, ButtonStyle, MessageFlags, parseEmoji } = require('discord.js');
 const db = require('./database');
 const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./chartService');
-const { createMonitoringComponents } = require('../components/buttons');
+const { createStyleSelectMenu } = require('../components/buttons');
 const { getWibTimestampString } = require('../utils/time');
+
+const BANNER_GIF_URL = 'https://cdn.discordapp.com/attachments/1407966960498642965/1410705503692132503/Proyek_Baru_129_F60CEC6.gif?ex=6aa05fe1&is=6a9f0e61&hm=890a3db8446f16fefa0a0031334b91fa5cbfee39700f02f0628b055a1a523a8d&';
 
 function buildMonitoringPayload(client, styleOption) {
   const history = db.getHistory();
@@ -16,28 +18,73 @@ function buildMonitoringPayload(client, styleOption) {
   const customWibTimeStr = getWibTimestampString();
 
   const botAvatarUrl = client.user ? client.user.displayAvatarURL({ extension: 'png', dynamic: true, size: 512 }) : null;
+  const accentColorInt = parseInt(colorConfig.hex.replace('#', ''), 16);
 
-  const embed = new EmbedBuilder()
-    .setTitle('<a:emoji_11:1342592665337856021> 𝗚𝗿𝗼𝘄𝘁𝗼𝗽𝗶𝗮 𝗟𝗶𝘃𝗲 𝗦𝗲𝗿𝘃𝗲𝗿 𝗠𝗼𝗻𝗶𝘁𝗼𝗿𝗶𝗻𝗴')
-    .setDescription(
-      'Real-time statistics dashboard for monitoring active Growtopia online player counts with interactive charts.\n\n' +
-      '🛠️ **Custom Bot Development Services (Discord, Telegram & WhatsApp)**\n' +
-      'Need a custom bot or selfbot for your server, business, or project automation?\n' +
-      'Contact Developer: <@758224726526656513>'
+  const isServiceOpen = db.getServiceStatus();
+  const devEmoji = parseEmoji('<:Developer:1546681999736045588>') || { id: '1546681999736045588', name: 'Developer' };
+
+  const container = new ContainerBuilder()
+    .setAccentColor(accentColorInt)
+    .addSectionComponents((section) => {
+      section.addTextDisplayComponents(
+        (textDisplay) => textDisplay.setContent('# <a:emoji_11:1342592665337856021> 𝗚𝗿𝗼𝘄𝘁𝗼𝗽𝗶𝗮 𝗟𝗶𝘃𝗲 𝗦𝗲𝗿𝘃𝗲𝗿 𝗠𝗼𝗻𝗶𝘁𝗼𝗿𝗶𝗻𝗴'),
+        (textDisplay) => textDisplay.setContent(
+          'Real-time statistics dashboard for monitoring active Growtopia online player counts with interactive charts.'
+        )
+      );
+
+      if (botAvatarUrl) {
+        section.setThumbnailAccessory((thumbnail) => thumbnail.setURL(botAvatarUrl));
+      }
+
+      return section;
+    })
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
+    .addSectionComponents((section) => {
+      section.addTextDisplayComponents(
+        (textDisplay) => textDisplay.setContent('🛠️ **Custom Bot Development Services (Discord, Telegram & WhatsApp)**'),
+        (textDisplay) => textDisplay.setContent(
+          'Need a custom bot or selfbot for your server, business, or project automation?\n' +
+          'Please press the button on the side to connect directly with the Developer!'
+        )
+      );
+
+      section.setButtonAccessory((button) =>
+        button
+          .setCustomId('btn_services')
+          .setLabel(isServiceOpen ? 'Services' : 'Closed')
+          .setEmoji(devEmoji)
+          .setStyle(isServiceOpen ? ButtonStyle.Success : ButtonStyle.Secondary)
+          .setDisabled(!isServiceOpen)
+      );
+
+      return section;
+    })
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `<a:online:1409290610870849609> **𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬**: \`${latestCount.toLocaleString()}\` Players\n` +
+        `<a:emoji_22:1349147982498500824> **𝗩𝗜𝗦𝗨𝗔𝗟 𝗦𝗧𝗬𝗟𝗘**: \`${styleDisplayLabel}\`\n` +
+        `<a:emoji_23:1349148026400276500> **Last Update**: <t:${currentUnixSec}:R>`
+      )
     )
-    .setColor(colorConfig.hex)
-    .setThumbnail(botAvatarUrl)
-    .addFields(
-      { name: '<a:online:1409290610870849609> 𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬', value: `\`${latestCount.toLocaleString()}\` Players`, inline: true },
-      { name: '<a:emoji_22:1349147982498500824> 𝗩𝗜𝗦𝗨𝗔𝗟 𝗦𝗧𝗬𝗟𝗘', value: `\`${styleDisplayLabel}\``, inline: true },
-      { name: '<a:emoji_23:1349148026400276500> **Last Update**', value: `<t:${currentUnixSec}:R>`, inline: false }
+    .addMediaGalleryComponents((gallery) =>
+      gallery.addItems((item) => item.setURL(chartUrl))
     )
-    .setImage(chartUrl)
-    .setFooter({ text: `! iHannsy A.K.A MasPakan - Aurhelana ©\nGrowtopia Server Stats - ${customWibTimeStr}` });
+    .addActionRowComponents((actionRow) =>
+      actionRow.setComponents(createStyleSelectMenu())
+    )
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
+    .addMediaGalleryComponents((gallery) =>
+      gallery.addItems((item) => item.setURL(BANNER_GIF_URL))
+    )
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(`-# ! iHannsy A.K.A MasPakan - Aurhelana ©\n-# Growtopia Server Stats - ${customWibTimeStr}`)
+    );
 
   return {
-    embeds: [embed],
-    components: createMonitoringComponents(styleOption)
+    components: [container],
+    flags: MessageFlags.IsComponentsV2
   };
 }
 

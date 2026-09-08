@@ -273,7 +273,9 @@ function generateChartUrl(history, styleOption = 'fill_value', colorConfig = nul
 
     const rawUrl = chart.getUrl();
     const nonce = `${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-    return rawUrl.includes('?') ? `${rawUrl}&_ts=${nonce}` : `${rawUrl}?_ts=${nonce}`;
+    const urlObj = new URL(rawUrl);
+    urlObj.searchParams.set('_ts', nonce);
+    return urlObj.toString();
 
   } catch (err) {
     console.error('[Chart Error] Failed to generate Chart URL:', err.message);

@@ -6,7 +6,7 @@ const { DB_PATH, MAX_HISTORY_MS } = require('../config/config');
 class DatabaseService {
   constructor() {
     this.filePath = path.resolve(DB_PATH);
-    this.data = { activeMonitoring: null, notificationChannelId: null, history: [] };
+    this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, servicesOpen: true, history: [] };
     this.ensureDirectory();
     this.loadSync();
   }
@@ -27,13 +27,14 @@ class DatabaseService {
           activeMonitoring: parsed.activeMonitoring || null,
           notificationChannelId: parsed.notificationChannelId || null,
           notificationRoleId: parsed.notificationRoleId || null,
+          servicesOpen: typeof parsed.servicesOpen === 'boolean' ? parsed.servicesOpen : true,
           history: Array.isArray(parsed.history) ? parsed.history : []
         };
         console.log('[DB] Database lokal berhasil dimuat.');
       }
     } catch (err) {
       console.error('[DB Error] Gagal membaca file database:', err.message);
-      this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, history: [] };
+      this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, servicesOpen: true, history: [] };
     }
   }
 
@@ -48,7 +49,6 @@ class DatabaseService {
   addHistoryRecord(count) {
     if (typeof count !== 'number' || isNaN(count)) return;
 
-    // Jangan catat jika player count sama dengan data terakhir
     if (this.data.history.length > 0) {
       const last = this.data.history[this.data.history.length - 1];
       if (last && last.count === count) return;
@@ -94,12 +94,21 @@ class DatabaseService {
     };
   }
 
+  setServiceStatus(status) {
+    this.data.servicesOpen = Boolean(status);
+    this.save();
+  }
+
+  getServiceStatus() {
+    return typeof this.data.servicesOpen === 'boolean' ? this.data.servicesOpen : true;
+  }
+
   getHistory() {
     return this.data.history || [];
   }
 
   resetData() {
-    this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, history: [] };
+    this.data = { activeMonitoring: null, notificationChannelId: null, notificationRoleId: null, servicesOpen: true, history: [] };
     this.save();
     return true;
   }
