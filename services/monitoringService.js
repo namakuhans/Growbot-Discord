@@ -70,7 +70,7 @@ function buildMonitoringPayload(client, styleOption) {
       gallery.addItems((item) => item.setURL(chartUrl))
     )
     .addActionRowComponents((actionRow) =>
-      actionRow.setComponents(createStyleSelectMenu(styleOption))
+      actionRow.setComponents(createStyleSelectMenu())
     )
     .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
     .addMediaGalleryComponents((gallery) =>
