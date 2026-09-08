@@ -12,7 +12,7 @@ function getWibTimestampString() {
     hour12: false
   };
 
-  const formatter = new Intl.DateTimeFormat('id-ID', options);
+  const formatter = new Intl.DateTimeFormat('en-US', options);
   const parts = formatter.formatToParts(now);
 
   let weekday = '', day = '', month = '', year = '', hour = '', minute = '', second = '';

@@ -21,7 +21,6 @@ function buildMonitoringPayload(client, styleOption) {
   const accentColorInt = parseInt(colorConfig.hex.replace('#', ''), 16);
 
   const isServiceOpen = db.getServiceStatus();
-  const serviceButtonLabel = isServiceOpen ? 'SERVICES HERE!' : 'CLOSE SERVICES';
 
   const container = new ContainerBuilder()
     .setAccentColor(accentColorInt)
@@ -39,21 +38,22 @@ function buildMonitoringPayload(client, styleOption) {
 
       return section;
     })
-    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(1))
+    .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
     .addSectionComponents((section) => {
       section.addTextDisplayComponents(
         (textDisplay) => textDisplay.setContent('🛠️ **Custom Bot Development Services (Discord, Telegram & WhatsApp)**'),
         (textDisplay) => textDisplay.setContent(
-          'Butuh bot khusus atau selfbot untuk server, bisnis, atau otomatisasi proyek Anda?\n' +
-          'Silakan tekan tombol di samping untuk terhubung langsung dengan Developer!'
+          'Need a custom bot or selfbot for your server, business, or project automation?\n' +
+          'Please press the button on the side to connect directly with the Developer!'
         )
       );
 
       section.setButtonAccessory((button) =>
         button
           .setCustomId('btn_services')
-          .setLabel(serviceButtonLabel)
-          .setStyle(ButtonStyle.Secondary)
+          .setLabel(isServiceOpen ? 'SERVICES HERE!' : 'SERVICES CLOSED')
+          .setStyle(isServiceOpen ? ButtonStyle.Success : ButtonStyle.Secondary)
+          .setDisabled(!isServiceOpen)
       );
 
       return section;
