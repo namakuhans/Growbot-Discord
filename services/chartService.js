@@ -33,19 +33,19 @@ function getDynamicColorConfig(history = [], styleOption = 'fill_value') {
 // Map nama variabel internal ke nama tampilan label Dropdown
 function getStyleLabel(styleKey) {
   const styleMap = {
-    'fill_value': 'Visual Menu 1',
-    'bubble': 'Visual Menu 2',
-    'sparkline': 'Visual Menu 3',
-    'horizontal_bar': 'Visual Menu 4',
-    'stepped_line': 'Visual Menu 5',
-    'point_circle': 'Visual Menu 6',
-    'point_triangle': 'Visual Menu 7',
-    'hide_axes': 'Visual Menu 8',
-    'no_fill': 'Visual Menu 9',
-    'formatted_numbers': 'Visual Menu 10',
-    'vertical_axis': 'Visual Menu 11'
+    'fill_value': 'Fill to Value',
+    'bubble': 'Bubble Chart',
+    'sparkline': 'Sparkline',
+    'horizontal_bar': 'Horizontal Bar',
+    'stepped_line': 'Stepped Line',
+    'point_circle': 'Point Styles: Circle',
+    'point_triangle': 'Point Styles: Triangle',
+    'hide_axes': 'Hide Axes, Gridlines & Gradient',
+    'no_fill': 'Boundaries (Line) No Fill',
+    'formatted_numbers': 'Formatted Numbers',
+    'vertical_axis': 'Vertical Axis Labels'
   };
-  return styleMap[styleKey] || 'Visual Menu 1';
+  return styleMap[styleKey] || 'Fill to Value';
 }
 
 function generateChartUrl(history, styleOption = 'fill_value', colorConfig = null) {
