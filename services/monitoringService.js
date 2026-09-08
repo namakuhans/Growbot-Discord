@@ -1,4 +1,4 @@
-const { ContainerBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { ContainerBuilder, ButtonStyle, MessageFlags, parseEmoji } = require('discord.js');
 const db = require('./database');
 const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./chartService');
 const { createStyleSelectMenu } = require('../components/buttons');
@@ -21,6 +21,7 @@ function buildMonitoringPayload(client, styleOption) {
   const accentColorInt = parseInt(colorConfig.hex.replace('#', ''), 16);
 
   const isServiceOpen = db.getServiceStatus();
+  const devEmoji = parseEmoji('<:Developer:1546681999736045588>') || { id: '1546681999736045588', name: 'Developer' };
 
   const container = new ContainerBuilder()
     .setAccentColor(accentColorInt)
@@ -52,7 +53,7 @@ function buildMonitoringPayload(client, styleOption) {
         button
           .setCustomId('btn_services')
           .setLabel(isServiceOpen ? 'SERVICES HERE!' : 'SERVICES CLOSED')
-          .setEmoji('<:Developer:1546681999736045588>')
+          .setEmoji(devEmoji)
           .setStyle(isServiceOpen ? ButtonStyle.Success : ButtonStyle.Secondary)
           .setDisabled(!isServiceOpen)
       );
@@ -62,7 +63,7 @@ function buildMonitoringPayload(client, styleOption) {
     .addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(2))
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
-        `<a:online:1409290610870849609> **𝗢𝗡𝗟𝗜𝗡E 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬**: \`${latestCount.toLocaleString()}\` Players\n` +
+        `<a:online:1409290610870849609> **𝗢𝗡𝗟𝗜𝗡𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗖𝗨𝗥𝗥𝗘𝗡𝗧𝗟𝗬**: \`${latestCount.toLocaleString()}\` Players\n` +
         `<a:emoji_22:1349147982498500824> **𝗩𝗜𝗦𝗨𝗔𝗟 𝗦𝗧𝗬𝗟𝗘**: \`${styleDisplayLabel}\`\n` +
         `<a:emoji_23:1349148026400276500> **Last Update**: <t:${currentUnixSec}:R>`
       )
