@@ -4,7 +4,7 @@ const { generateChartUrl, getStyleLabel, getDynamicColorConfig } = require('./ch
 const { createStyleSelectMenu } = require('../components/buttons');
 const { getWibTimestampString } = require('../utils/time');
 
-const BANNER_GIF_URL = 'https://cdn.discordapp.com/attachments/1407966960498642965/1410705503692132503/Proyek_Baru_129_F60CEC6.gif?ex=6aa05fe1&is=6a9f0e61&hm=890a3db8446f16fefa0a0031334b91fa5cbfee39700f02f0628b055a1a523a8d&';
+const BANNER_GIF_URL = 'https://cdn.discordapp.com/attachments/1393337962401366076/1546805425934966794/Proyek_Baru_145_6A42106.gif?ex=6aa11e4f&is=6a9fcccf&hm=6da56bedf5ea8454949f472ea1bc942ef4432f6186d1d6b094cfa48f3eb8b275&';
 
 function buildMonitoringPayload(client, styleOption) {
   const history = db.getHistory();
