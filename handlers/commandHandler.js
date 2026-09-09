@@ -8,6 +8,7 @@ const notifCommand = require('../commands/notif');
 const resetCommand = require('../commands/reset');
 const servopenCommand = require('../commands/servopen');
 const servcloseCommand = require('../commands/servclose');
+const stopCommand = require('../commands/stop');
 
 const commands = new Collection();
 commands.set(statsCommand.data.name, statsCommand);
@@ -17,6 +18,7 @@ commands.set(notifCommand.data.name, notifCommand);
 commands.set(resetCommand.data.name, resetCommand);
 commands.set(servopenCommand.data.name, servopenCommand);
 commands.set(servcloseCommand.data.name, servcloseCommand);
+commands.set(stopCommand.data.name, stopCommand);
 
 async function registerCommands() {
   try {
@@ -27,7 +29,7 @@ async function registerCommands() {
       Routes.applicationCommands(config.CLIENT_ID),
       { body: commandData }
     );
-    console.log('[System] Slash Commands (/stats, /proxy, /delproxy, /notif, /reset, /servopen, /servclose) successfully registered.');
+    console.log('[System] Slash Commands (/stats, /proxy, /delproxy, /notif, /reset, /servopen, /servclose, /stop) successfully registered.');
   } catch (err) {
     console.error('[System Error] Failed to register commands:', err.message);
   }
